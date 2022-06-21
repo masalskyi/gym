@@ -9,7 +9,6 @@ FRAME_HEIGHT = 400
 out = cv2.VideoWriter("./results/random_cart_pole.mp4", cv2.VideoWriter_fourcc(*'MP4V'), 120, (FRAME_WIDTH, FRAME_HEIGHT))
 
 episodes = 20
-images = []
 for episode in range(episodes+1):
     state = env.reset()
     done = False
@@ -20,10 +19,10 @@ for episode in range(episodes+1):
         action = random.choice([0, 1])
         n_state, reward, done, info = env.step(action)
         score += reward
-        cv2.putText(img, "Before:", (10, 30), cv2.FONT_ITALIC, 1, (0, 0, 0), thickness=2)
-        cv2.putText(img, "Win: 0", (FRAME_WIDTH-280, 30), cv2.FONT_ITALIC, 1, (0, 0, 0), thickness=2)
-        cv2.putText(img, "Lose: {}".format(episode), (FRAME_WIDTH-160, 30), cv2.FONT_ITALIC, 1, (0, 0, 0), thickness=2)
-        cv2.putText(img, "Score: {}".format(score), (FRAME_WIDTH-250, 60), cv2.FONT_ITALIC, 1, (0, 0, 0), thickness=2)
+        cv2.putText(img, "Before RL:", (10, 30), cv2.FONT_ITALIC, 0.8, (0, 0, 0), thickness=2)
+        cv2.putText(img, "Win: 0", (FRAME_WIDTH-280, 30), cv2.FONT_ITALIC, 0.8, (0, 0, 0), thickness=2)
+        cv2.putText(img, "Lose: {}".format(episode), (FRAME_WIDTH-160, 30), cv2.FONT_ITALIC, 0.8, (0, 0, 0), thickness=2)
+        cv2.putText(img, "Score: {}".format(score), (FRAME_WIDTH-280, 60), cv2.FONT_ITALIC, 0.8, (0, 0, 0), thickness=2)
 
         out.write(img)
         out.write(img)
@@ -31,9 +30,8 @@ for episode in range(episodes+1):
         out.write(img)
         out.write(img)
         out.write(img)
-        images.append(img)
-        cv2.imshow("game", img)
-        cv2.waitKey(1)
+        # cv2.imshow("game", img)
+        # cv2.waitKey(1)
     print("Episode {}: {}".format(episode, score))
 
 cv2.destroyAllWindows()
