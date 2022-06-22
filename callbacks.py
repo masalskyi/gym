@@ -115,17 +115,18 @@ class TestLogger(Callback):
 
 
 class TrainEpisodeLogger(Callback):
-    def __init__(self):
+    def __init__(self, dir_to_save= "./"):
         # Some algorithms compute multiple episodes at once since they are multi-threaded.
         # We therefore use a dictionary that is indexed by the episode to separate episodes
         # from each other.
+        self.dir_to_save = dir_to_save
         self.episode_start = {}
         self.observations = {}
         self.rewards = {}
         self.actions = {}
         self.metrics = {}
         self.step = 0
-        self.lastreward = -200
+        self.lastreward = -1000
 
     def on_train_begin(self, logs):
         self.train_start = timeit.default_timer()
@@ -191,11 +192,11 @@ class TrainEpisodeLogger(Callback):
 
         if np.sum(self.rewards[episode]) > self.lastreward:
 
-            previousWeights = 'checkpoint_reward_{}.h5f'.format(self.lastreward)
+            previousWeights = self.dir_to_save + 'checkpoint_reward_{}.h5f'.format(self.lastreward)
             if os.path.exists(previousWeights): os.remove(previousWeights)
             self.lastreward = np.sum(self.rewards[episode])
             print("The reward is higher than the best one, saving checkpoint weights")
-            newWeights = 'checkpoint_reward_{}.h5f'.format(np.sum(self.rewards[episode]))
+            newWeights = self.dir_to_save + 'checkpoint_reward_{}.h5f'.format(np.sum(self.rewards[episode]))
             self.model.save_weights(newWeights, overwrite=True)
 
         else:
