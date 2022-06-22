@@ -40,8 +40,9 @@ The game ends when:
  <li>The position of the car is greater than or equal to 0.5 (the goal position on top of the right hill)</li>
  <li>The length of the episode is 200.</li>
 </ul>
+<p align="center">
 <iframe width="560" height="315" src="https://www.youtube.com/embed/9ZyPZ-KfGF8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
+</p>
 The solution is based on deep q-learning algorithm. The model has the structure:
 ```python
 from tensorflow.keras.models import Model
