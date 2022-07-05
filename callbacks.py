@@ -115,7 +115,7 @@ class TestLogger(Callback):
 
 
 class TrainEpisodeLogger(Callback):
-    def __init__(self, dir_to_save= "./"):
+    def __init__(self, dir_to_save= "./", episodes_for_averaging = 10):
         # Some algorithms compute multiple episodes at once since they are multi-threaded.
         # We therefore use a dictionary that is indexed by the episode to separate episodes
         # from each other.
@@ -126,12 +126,15 @@ class TrainEpisodeLogger(Callback):
         self.actions = {}
         self.metrics = {}
         self.step = 0
-        self.lastreward = -1000
+        self.lastreward = -100000
+        self.episodes_rewards = [self.lastreward for _ in range(episodes_for_averaging)]
+        self.episodes_for_averaging = episodes_for_averaging
 
     def on_train_begin(self, logs):
         self.train_start = timeit.default_timer()
         self.metrics_names = self.model.metrics_names
         print('Training for {} steps ...'.format(self.params['nb_steps']))
+        print('Number of episodes for accumulate =', self.episodes_for_averaging)
 
     def on_train_end(self, logs):
         duration = timeit.default_timer() - self.train_start
@@ -189,18 +192,20 @@ class TrainEpisodeLogger(Callback):
         '''
         Code for saving up weights if the episode reward is higher than the last one
         '''
-
-        if np.sum(self.rewards[episode]) > self.lastreward:
+        self.episodes_rewards.pop(0)
+        self.episodes_rewards.append(np.sum(self.rewards[episode]))
+        if np.mean(self.episodes_rewards) > self.lastreward:
 
             previousWeights = self.dir_to_save + 'checkpoint_reward_{}.h5f'.format(self.lastreward)
             if os.path.exists(previousWeights): os.remove(previousWeights)
-            self.lastreward = np.sum(self.rewards[episode])
+            self.lastreward = np.mean(self.episodes_rewards)
             print("The reward is higher than the best one, saving checkpoint weights")
-            newWeights = self.dir_to_save + 'checkpoint_reward_{}.h5f'.format(np.sum(self.rewards[episode]))
+            newWeights = self.dir_to_save + 'checkpoint_reward_{}.h5f'.format(np.mean(self.episodes_rewards))
             self.model.save_weights(newWeights, overwrite=True)
 
         else:
-            print("The reward is lower than the best one, checkpoint weights not updated")
+            pass
+            # print("The reward is lower than the best one, checkpoint weights not updated")
 
         # Free up resources.
         del self.episode_start[episode]
