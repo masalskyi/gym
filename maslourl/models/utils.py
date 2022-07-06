@@ -1,15 +1,15 @@
 import numpy as np
 import random
 import tensorflow as tf
-
+import keras.backend as K
 
 def get_q_values(model, state):
     input = state[np.newaxis, ...]
-    return model.predict(input)[0]
+    return model.predict(input, verbose=0)[0]
 
 
 def get_multiple_q_values(model, states):
-    return model.predict(states)
+    return model.predict(states, verbose=0)
 
 
 def select_action_epsilon_greedy(q_values, epsilon):
@@ -55,8 +55,8 @@ def calculate_target_values(model, target_model, state_transitions, discount_fac
 
 def masked_rmse(mask_value=0):
     def f(y_true, y_pred):
-        mask_true = tf.keras.cast(tf.keras.not_equal(y_true, mask_value), tf.keras.floatx())
-        masked_squared_error = tf.keras.square(mask_true * (y_true - y_pred))
-        return tf.keras.sqrt(tf.keras.sum(masked_squared_error) / tf.keras.sum(mask_true))
+        mask_true = K.cast(K.not_equal(y_true, mask_value), K.floatx())
+        masked_squared_error = K.square(mask_true * (y_true - y_pred))
+        return K.sqrt(K.sum(masked_squared_error) / K.sum(mask_true))
     f.__name__ = 'masked_rmse'
     return f
