@@ -3,6 +3,7 @@ import random
 import tensorflow as tf
 import keras.backend as K
 
+
 def get_q_values(model, state):
     input = state[np.newaxis, ...]
     return model.predict(input, verbose=0)[0]
@@ -58,5 +59,20 @@ def masked_rmse(mask_value=0):
         mask_true = K.cast(K.not_equal(y_true, mask_value), K.floatx())
         masked_squared_error = K.square(mask_true * (y_true - y_pred))
         return K.sqrt(K.sum(masked_squared_error) / K.sum(mask_true))
+
     f.__name__ = 'masked_rmse'
+    return f
+
+
+def masked_huber_loss(mask_value=0, clip_delta=1):
+    def f(y_true, y_pred):
+        error = y_true - y_pred
+        cond = K.abs(error) < clip_delta
+        mask_true = K.cast(K.not_equal(y_true, mask_value), K.floatx())
+        masked_squared_error = 0.5 * K.square(mask_true * (y_true - y_pred))
+        linear_loss = mask_true * (clip_delta * K.abs(error) - 0.5 * (clip_delta ** 2))
+        huber_loss = tf.where(cond, masked_squared_error, linear_loss)
+        return K.sum(huber_loss) / K.sum(mask_true)
+
+    f.__name__ = 'masked_huber_loss'
     return f

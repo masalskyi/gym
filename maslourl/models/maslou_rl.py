@@ -1,3 +1,5 @@
+from time import time
+
 from maslourl.models.replay_buffer import ReplayBuffer, StateTransition
 from maslourl.trackers.file_logger import FileLogger
 from maslourl.trackers.average_tracker import AverageRewardTracker
@@ -32,9 +34,12 @@ class MaslouRLModel2QDiscrete(ABC):
         for episode in range(episodes):
             print(f"Starting episode {episode}")
             episode_reward = 0
-            state = self.env.reset()
             params = self.get_params_for_episode()
+            state = self.env.reset()
+            state = self.state_transform(state, params)
+            episode_start_time = time()
             for step in range(max_steps_for_episode):
+                params["step"] = step
                 step_count += 1
                 action, new_state, reward, done, info = self.step(state, target_model, epsilon, params)
                 episode_reward += reward
@@ -59,8 +64,9 @@ class MaslouRLModel2QDiscrete(ABC):
             average_tracker.add(episode_reward)
             average = average_tracker.get_average()
             print(
-                f"episode {episode} finished in {step} steps with reward {episode_reward}. "
-                f"Average reward over last {episodes_for_average_tracking}: {average}")
+                f"episode {episode} finished in {step} steps with reward {episode_reward:.2f}. "
+                f"Average reward over last {episodes_for_average_tracking}: {average:.2f} "
+                f"And took: {(time() - episode_start_time):.2f} seconds. ")
             if file_logger is not None:
                 file_logger.log(episode, step, episode_reward, average)
             if episode != 0 and episode % model_backup_frequency_episodes == 0:
@@ -85,3 +91,7 @@ class MaslouRLModel2QDiscrete(ABC):
     @abstractmethod
     def copy_model(self, model):
         raise NotImplementedError("__copy_model must be implemented in child")
+
+    @abstractmethod
+    def state_transform(self, state, params):
+        raise NotImplementedError("state_transform must be implemented in child")
