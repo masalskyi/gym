@@ -10,9 +10,9 @@ from abc import ABC, abstractmethod
 
 # performs double q learning for discrete action space in episode MDP
 class MaslouRLModel2QDiscrete(ABC):
-    def __init__(self, env, model, replay_buffer_size=10000):
+    def __init__(self, env, replay_buffer_size=10000):
         self.env = env
-        self.model = model
+        self.model = self.build_model()
         self.replay_buffer = ReplayBuffer(replay_buffer_size)
 
     def summary(self):
@@ -34,14 +34,11 @@ class MaslouRLModel2QDiscrete(ABC):
         for episode in range(episodes):
             print(f"Starting episode {episode}")
             episode_reward = 0
-            params = self.get_params_for_episode()
             state = self.env.reset()
-            state = self.state_transform(state, params)
             episode_start_time = time()
             for step in range(max_steps_for_episode):
-                params["step"] = step
                 step_count += 1
-                action, new_state, reward, done, info = self.step(state, target_model, epsilon, params)
+                action, new_state, reward, done, info = self.step(state, epsilon)
                 episode_reward += reward
                 if step == max_steps_for_episode:
                     print(f"Episode reached the maximum number of steps. {max_steps_for_episode}")
@@ -50,7 +47,7 @@ class MaslouRLModel2QDiscrete(ABC):
                 self.replay_buffer.add(state_transition)
                 state = new_state
                 if step_count % target_network_replace_frequency_steps == 0:
-                    print("Updating target model")
+                    # print("Updating target model")
                     target_model = self.copy_model(self.model)
 
                 if self.replay_buffer.length() >= warmup_before_start_trainings_steps and step_count % train_every_x_steps == 0:
@@ -79,19 +76,48 @@ class MaslouRLModel2QDiscrete(ABC):
     def train_model(self, states, targets):
         self.model.fit(states, targets, epochs=1, batch_size=len(targets), verbose=0)
 
-    @abstractmethod
-    def get_params_for_episode(self):
-        raise NotImplementedError("__get_params_for_episode must be implemented in child")
+    def test(self, episodes, max_steps_per_episode, visualize=False):
+        rewards = []
+        for episode in range(episodes):
+            print(f"Starting episode {episode}")
+            episode_reward = 0
+            state = self.env.reset()
+            episode_start_time = time()
+            for step in range(max_steps_per_episode):
+                if visualize:
+                    self.env.render()
+                action, new_state, reward, done, info = self.step(state, 0)
+                episode_reward += reward
+                if step == max_steps_per_episode:
+                    print(f"Episode reached the maximum number of steps. {max_steps_per_episode}")
+                    done = True
+                state = new_state
+                if done:
+                    break
+            print(
+                f"episode {episode} finished in {step} steps with reward {episode_reward:.2f}. "
+                f"And took: {(time() - episode_start_time):.2f} seconds. ")
+            rewards.append(episode_reward)
+        print("Average reward ", np.mean(rewards))
+
 
     @abstractmethod
     # returns action that was done, new state, reward, done or not, info
-    def step(self, state, target_model, epsilon, params):
+    def step(self, state, epsilon, params):
         raise NotImplementedError("step must be implemented in child")
 
     @abstractmethod
     def copy_model(self, model):
         raise NotImplementedError("__copy_model must be implemented in child")
 
+
     @abstractmethod
-    def state_transform(self, state, params):
-        raise NotImplementedError("state_transform must be implemented in child")
+    def load_model(self, model_file):
+        raise NotImplementedError("load must be implemented in child")
+
+    @abstractmethod
+    def build_model(self, model_file):
+        raise NotImplementedError("build model must be implemented in child")
+
+    def save_model(self, model_file):
+        self.model.save(model_file)
