@@ -23,7 +23,7 @@ class LunarLander2QModel(MaslouRLModel2QDiscrete):
     def copy_model(self, model):
         backup_file = 'backup_' + str(uuid.uuid4())
         model.save(backup_file)
-        new_model = tf.keras.models.load_model(backup_file, custom_objects={'masked_huber_loss': masked_huber_loss()})
+        new_model = tf.keras.models.load_model(backup_file)
         shutil.rmtree(backup_file)
         return new_model
 
@@ -36,17 +36,17 @@ class LunarLander2QModel(MaslouRLModel2QDiscrete):
 
 
     def load_model(self, model_path):
-        self.model = tf.keras.models.load_model(model_path, custom_objects={'masked_huber_loss': masked_huber_loss()})
+        self.model = tf.keras.models.load_model(model_path)
 
     def build_model(self):
         states = 8
         actions = 4
         learning_rate = 0.001
-        regularization_factor = 0.001
+        # regularization_factor = 0.001
         inputs = layers.Input(shape=(states,))
-        x = layers.Dense(32, activation="relu", kernel_regularizer=l2(regularization_factor))(inputs)
-        x = layers.Dense(64, activation="relu", kernel_regularizer=l2(regularization_factor))(x)
-        outputs = layers.Dense(actions, activation="linear", kernel_regularizer=l2(regularization_factor))(x)
+        x = layers.Dense(164, activation="relu")(inputs)
+        x = layers.Dense(128, activation="relu")(x)
+        outputs = layers.Dense(actions, activation="linear")(x)
         model = Model(inputs, outputs, name="LunarLander")
-        model.compile(Adam(learning_rate=learning_rate), loss=masked_huber_loss())
+        model.compile(Adam(learning_rate=learning_rate), loss="mse")
         return model
