@@ -65,7 +65,7 @@ class MaslouRLModel2QDiscrete(ABC):
             if episode != 0 and episode % model_backup_frequency_episodes == 0:
                 backup_file = path_to_back_up + f"model_{episode}.h5"
                 print(f"Backing up model to {backup_file}")
-                self.model.save(backup_file)
+                self.save_model(backup_file)
 
     def test(self, episodes, max_steps_per_episode, visualize=False):
         rewards = []
@@ -136,4 +136,4 @@ class MaslouRLModel2QDiscrete(ABC):
         raise NotImplementedError("build model must be implemented in child")
 
     def save_model(self, model_file):
-        self.model.save(model_file)
+        self.Q_eval.save(model_file)
