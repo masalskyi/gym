@@ -5,7 +5,7 @@ All algorithms are created in python + tensorflow + keras + keras-rl
 
 ## Classical controls
 <ul>
-    <li>[Cart pole](classical_controls/cart_pole.md)</li>
+    <li>[Cart pole](classical_controls/cart_pole)</li>
 </ul>
 
 ### Mountain car v0
