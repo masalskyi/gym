@@ -2,9 +2,10 @@
 ## Introduction
 This projects aims to improve my skills in RL. All Environments that i would use can be found [here](https://www.gymlibrary.ml/)
 All algorithms are created in python + tensorflow + keras + keras-rl
+
 ## Classical controls
 <ul>
-    [Cart pole](classical_controls/cart_pole.md)
+    <li>[Cart pole](classical_controls/cart_pole.md)</li>
 </ul>
 
 ### Mountain car v0
