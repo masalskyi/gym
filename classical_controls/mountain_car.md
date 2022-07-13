@@ -1,4 +1,4 @@
-<a href="../index">Main page</a>
+<a href="/gym">Main page</a>
 # Mountain car v0
 [Mountain Car](https://www.gymlibrary.ml/environments/classic_control/mountain_car/) is a classical control environment. 
 The main purpose of player is to achieve the flag. All that player can do is to apply force to 
