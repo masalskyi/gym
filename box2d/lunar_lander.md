@@ -18,6 +18,11 @@ The episode finishes if:
     move and doesn't collide with any other body.</li>
 </ul>
 
+Video results:
+<p align="center">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/yEASE3ZCWvs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
+
 First solution was based on vanilla deep q learning. However, it did not perform well cause of problems of 
 vanilla learning. ![vanilla_learning.png](vanilla_learning.png).
 Second solution that performs good enough is based on double q learning. Double q learning is a technique where
