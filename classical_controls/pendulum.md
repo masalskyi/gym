@@ -6,9 +6,14 @@ The system consists of a pendulum attached at one end to a fixed point, and the 
 The pendulum starts in a random position and the goal is to apply torque on the free end to swing it into an 
 upright position, with its center of gravity right above the fixed point.
 The episode terminates at 200 time steps.
+
+
+Video results:
 <p align="center">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/1kgrQNWCbEE" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </p>
+
+
 This is a type of RL problems where actions are continuous variables, 
 so the models I used before are not suitable here. The solution is based on deep q-learning algorithm using 
 [DDPGAgent](https://keras-rl.readthedocs.io/en/latest/agents/ddpg/). Algorithm needs two models. 

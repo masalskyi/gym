@@ -8,9 +8,12 @@ The game ends when:
     <li>Cart Position is greater than ±2.4 (center of the cart reaches the edge of the display)</li>
     <li>Episode length is greater than 500</li>
 </ul>
+
+Video results:
 <p align="center">
     <iframe width="560" height="315" src="https://www.youtube.com/embed/-0jJZjB42ZU" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </p>
+
 The solution is based on deep q-learning algorithm. The model has the structure:
 ```python
 from tensorflow.keras.models import Sequential

@@ -21,10 +21,40 @@ The episode finishes if:
 First solution was based on vanilla deep q learning. However, it did not perform well cause of problems of 
 vanilla learning. ![vanilla_learning.png](vanilla_learning.png).
 Second solution that performs good enough is based on double q learning. Double q learning is a technique where
-appears a target model to prevent learning bias that is in vanilla learning.
+appears a target model to prevent learning bias that is in vanilla learning. ![ddq_learning.png](ddq_learning.png)
+The deep model has a following structure
 
+```python
+import tensorflow.keras.layers as layers
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+def build_model(states, actions, learning_rate):
+    inputs = layers.Input(shape=(states,))
+    x = layers.Dense(256, activation="relu")(inputs)
+    x = layers.Dense(256, activation="relu")(x)
+    outputs = layers.Dense(actions, activation="linear")(x)
+    model = Model(inputs, outputs, name="LunarLander")
+    model.compile(Adam(learning_rate=learning_rate), loss="mse")
+    return model
+```
 
-
+The hyperparameters of models are:
+```python
+replay_buffer_size = 1000000
+training_batch_size = 64
+max_episodes = 5000
+max_steps = 3000
+target_network_replace_frequency_steps = 100
+model_backup_frequency_episodes = 25
+starting_epsilon = 1
+minimum_epsilon = 0.01
+epsilon_decay = 0.996
+discount_factor = 0.99
+states = 8
+actions = 4
+learning_rate = 0.0005
+```
+The final model achieved 237.52 average reward for 100 episodes. That is enough to conclude that the task is solved.
 
 
 
