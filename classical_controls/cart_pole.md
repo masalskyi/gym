@@ -1,4 +1,4 @@
-<a href="/">Main page</a>
+<a href="../index">Main page</a>
 # Cart pole v1
 [Cart pole](https://www.gymlibrary.ml/environments/classic_control/cart_pole/) is a classical control environment. 
 The main purpose of player is balancing the stick. All that player can do is to move right or left. Actions are discrete.
