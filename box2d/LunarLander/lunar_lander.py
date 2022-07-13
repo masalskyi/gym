@@ -12,7 +12,7 @@ class LunarLander2QModel(MaslouRLModel2QDiscrete):
     def build_model(self):
         states = 8
         actions = 4
-        learning_rate = 0.005
+        learning_rate = 0.0005
         # regularization_factor = 0.001
         inputs = layers.Input(shape=(states,))
         x = layers.Dense(256, activation="relu")(inputs)

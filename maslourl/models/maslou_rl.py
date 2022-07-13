@@ -20,6 +20,7 @@ class MaslouRLModel2QDiscrete(ABC):
         self.n_actions = env.action_space.n
         self.action_space = np.array([i for i in range(self.n_actions)])
         self.memory = ReplayBuffer(replay_buffer_size, input_shape=self.input_shape, n_actions=self.n_actions)
+        self.epsilon = 0
 
     def summary(self):
         print("Observation space:", self.env.observation_space)
@@ -119,7 +120,7 @@ class MaslouRLModel2QDiscrete(ABC):
 
             self.epsilon = self.epsilon * self.epsilon_decay if self.epsilon > self.epsilon_min else self.epsilon_min
 
-            if self.memory.mem_cntr % self.target_network_replace_frequency_steps:
+            if self.memory.mem_cntr % self.target_network_replace_frequency_steps == 0:
                 self.update_target_model()
 
     def update_target_model(self):
