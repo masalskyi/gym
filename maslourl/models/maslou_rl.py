@@ -86,6 +86,7 @@ class MaslouRLModel2QDiscrete(ABC):
                     print(f"Episode reached the maximum number of steps. {max_steps_per_episode}")
                     done = True
                 if done:
+                    self.env.render()
                     break
             print(
                 f"episode {episode} finished in {step} steps with reward {episode_reward:.2f}. "
