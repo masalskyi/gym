@@ -58,7 +58,7 @@ class CarRacerModel(MaslouRLModelDDPGContinuous):
 
         action_input = layers.Input(shape=(self.n_actions,))
         x = layers.Concatenate()([x, action_input])
-        x = layers.Dense(1, activation="relu")(x)
+        x = layers.Dense(10, activation="relu")(x)
 
         outputs = layers.Dense(1, activation="linear")(x)
         model = Model(inputs=[state_input, action_input], outputs=outputs, name="CarRacer_critic")
@@ -76,7 +76,7 @@ class CarRacerModel(MaslouRLModelDDPGContinuous):
         x = layers.Conv2D(filters=64, kernel_size=5, activation="relu", data_format='channels_first')(x)
         x = layers.Conv2D(filters=64, kernel_size=3, activation="relu", data_format='channels_first')(x)
         x = layers.Flatten()(x)
-        x = layers.Dense(1, activation="relu")(x)
+        x = layers.Dense(10, activation="relu")(x)
 
         rotation = layers.Dense(1, activation="tanh")(x)
         gas = layers.Dense(1, activation="sigmoid")(x)
