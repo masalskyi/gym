@@ -17,13 +17,14 @@ from maslourl.models.utils import get_q_values, select_action_epsilon_greedy
 class MaslouRLModel2QDiscrete(ABC):
     def __init__(self, env, replay_buffer_size=10000):
         self.env = env
-        self.Q_eval = self.build_model()
-        self.Q_target = self.build_model()
-        self.update_target_model()
         self.input_shape = env.observation_space.shape
         self.n_actions = env.action_space.n
         self.action_space = np.array([i for i in range(self.n_actions)])
         self.memory = ReplayBuffer(replay_buffer_size, input_shape=self.input_shape, n_actions=self.n_actions)
+
+        self.Q_eval = self.build_model()
+        self.Q_target = self.build_model()
+        self.update_target_model()
         self.epsilon = 0
 
     def summary(self):
@@ -152,7 +153,6 @@ class MaslouRLModelDDPGContinuous(ABC):
         self.env = env
         self.input_shape = env.observation_space.shape
         self.n_actions = np.prod(env.action_space.shape)
-        self.action_space = np.array([i for i in range(self.n_actions)])
         self.min_actions = env.action_space.low
         self.max_actions = env.action_space.high
         self.memory = ReplayBuffer(replay_buffer_size, input_shape=self.input_shape, n_actions=self.n_actions,

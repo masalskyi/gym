@@ -15,6 +15,8 @@ noise = 0.1
 
 agent = PendulumDDPGAgent(env)
 
-agent.train(episodes=max_episodes, max_steps_for_episode=max_steps,tau = 0.005, noise = noise, training_batch_size=training_batch_size,
-            discount_factor=discount_factor, model_backup_frequency_episodes= model_backup_frequency_episodes,path_to_back_up="./back_ups/",
+agent.train(episodes=max_episodes, max_steps_for_episode=max_steps, tau=0.005, noise=noise,
+            training_batch_size=training_batch_size,
+            discount_factor=discount_factor, model_backup_frequency_episodes=model_backup_frequency_episodes,
+            path_to_back_up="./back_ups/",
             episodes_for_average_tracking=20, file_logger=FileLogger("./logging/log2.csv"))
