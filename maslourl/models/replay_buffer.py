@@ -12,8 +12,8 @@ class ReplayBuffer(object):
 
     def store_transition(self, state, action, reward, state_, done):
         index = self.mem_cntr % self.mem_size
-        self.state_memory[index] = state
-        self.new_state_memory[index] = state_
+        self.state_memory[index] = state.reshape(self.input_shape)
+        self.new_state_memory[index] = state_.reshape(self.input_shape)
         if self.discrete:
             actions = np.zeros(self.action_memory.shape[1])
             actions[action] = 1.0
@@ -21,7 +21,7 @@ class ReplayBuffer(object):
         else:
             self.action_memory[index] = action
         self.reward_memory[index] = reward
-        self.terminal_memory[index] = 1 - int(done)
+        self.terminal_memory[index] = done
         self.mem_cntr += 1
 
     def sample_buffer(self, batch_size):
