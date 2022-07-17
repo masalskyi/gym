@@ -256,8 +256,9 @@ class MaslouRLModelDDPGContinuous(ABC):
             episode_start_time = time()
             for step in range(max_steps_for_episode):
                 action = self.choose_action(state, noise=noise)
+                action = np.squeeze(action)
                 new_state, reward, done, info = self.env.step(action)
-                episode_reward += reward[0]
+                episode_reward += reward
                 if step == max_steps_for_episode:
                     print(f"Episode reached the maximum number of steps. {max_steps_for_episode}")
                     done = True
@@ -290,6 +291,7 @@ class MaslouRLModelDDPGContinuous(ABC):
                 if visualize:
                     self.env.render()
                 action = self.choose_action(state, test=True)
+                action = np.squeeze(action)
                 state, reward, done, info = self.env.step(action)
                 episode_reward += reward
                 if step == max_steps_per_episode:
