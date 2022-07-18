@@ -1,8 +1,8 @@
 from time import time
 from abc import ABC, abstractmethod
 
-import keras.losses
 import tensorflow as tf
+import tensorflow.keras.losses
 
 from tensorflow.keras.models import load_model
 import numpy as np
@@ -170,11 +170,11 @@ class MaslouRLModelDDPGContinuous(ABC):
         print(self.critic.summary())
 
     @abstractmethod
-    def build_actor_model(self) -> keras.models.Model:
+    def build_actor_model(self) -> tensorflow.keras.models.Model:
         pass
 
     @abstractmethod
-    def build_critic_model(self) -> keras.models.Model:
+    def build_critic_model(self) -> tensorflow.keras.models.Model:
         pass
 
     def save_models(self, model_file):
@@ -232,7 +232,7 @@ class MaslouRLModelDDPGContinuous(ABC):
             critic_values_ = tf.squeeze(self.critic_target([states_, target_actions]), axis=1)
             critic_values = tf.squeeze(self.critic([states, actions]), axis=1)
             target = rewards + discount_factor * (1-done) * critic_values_
-            critic_loss = keras.losses.MSE(target, critic_values)
+            critic_loss = tensorflow.keras.losses.MSE(target, critic_values)
             critic_network_gradient = tape.gradient(critic_loss, self.critic.trainable_variables)
             self.critic.optimizer.apply_gradients(zip(critic_network_gradient, self.critic.trainable_variables))
 
@@ -244,7 +244,7 @@ class MaslouRLModelDDPGContinuous(ABC):
             self.actor.optimizer.apply_gradients(zip(actor_network_gradient, self.actor.trainable_variables))
         self.update_target_models(tau)
 
-    def train(self, episodes, max_steps_for_episode=1000, tau=0.005, noise=0.1,
+    def train(self, episodes, max_steps_for_episode=1000, train_every_step=1, tau=0.005, noise=0.1,
               training_batch_size=64, discount_factor=0.99,
               model_backup_frequency_episodes=100, path_to_back_up="./",
               episodes_for_average_tracking=100, file_logger=None):
@@ -264,7 +264,8 @@ class MaslouRLModelDDPGContinuous(ABC):
                     done = True
                 self.remember(state, action, reward, new_state, done)
                 state = new_state
-                self.learn(training_batch_size, discount_factor, tau)
+                if step % train_every_step == 0:
+                    self.learn(training_batch_size, discount_factor, tau)
                 if done:
                     break
             average_tracker.add(episode_reward)

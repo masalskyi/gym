@@ -14,7 +14,7 @@ def image_preprocess(image, rgb_2_bgr=True, resize=None):
 
 class MCarRacingEnv:
     def __init__(self, slide_window_length=3, image_resize=(96, 96)):
-        self.env = gym.make("CarRacing-v1")
+        self.env = gym.make("CarRacing-v2")
         self.slide_window_length = slide_window_length
         self.image_resize = image_resize
         self.buffer = np.zeros((slide_window_length, *image_resize))
