@@ -32,11 +32,11 @@ train_every_step = 16
 
 env = MCarRacingEnv(slide_window_length=2, image_resize=(60, 60))
 agent = CarRacerModel(env, replay_buffer_size=replay_buffer_size)
-agent.train(episodes=max_episodes, max_steps_for_episode=max_steps, train_every_step=train_every_step, noise=noise,
-            tau=tau,
-            training_batch_size=training_batch_size, discount_factor=discount_factor,
-            model_backup_frequency_episodes=model_backup_frequency_episodes, path_to_back_up="./back_ups/",
-            episodes_for_average_tracking=100, file_logger=FileLogger("./logging/log1.csv"))
-# agent.test(5, 3000, visualize=True)
+# agent.train(episodes=max_episodes, max_steps_for_episode=max_steps, train_every_step=train_every_step, noise=noise,
+#             tau=tau,
+#             training_batch_size=training_batch_size, discount_factor=discount_factor,
+#             model_backup_frequency_episodes=model_backup_frequency_episodes, path_to_back_up="./back_ups/",
+#             episodes_for_average_tracking=50, file_logger=FileLogger("./logging/log1.csv"))
+agent.test(1, 1000, visualize=True)
 # t = np.zeros((1,4,80,80))
 # print(agent.actor.predict(t))

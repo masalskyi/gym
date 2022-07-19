@@ -3,14 +3,22 @@ import gym
 import numpy as np
 import cv2
 
-
 def image_preprocess(image, rgb_2_bgr=True, resize=None):
+    image = image[:-50]
+
+    image[np.where((np.logical_and(image >= [101, 203, 101], image <= [101, 230, 101])).all(axis=2))] = np.array([101, 203, 101])
+    image[np.where((np.logical_and(image >= [101, 101, 101], image <= [106, 106, 106])).all(axis=2))] = np.array([106, 106, 106])
     if rgb_2_bgr:
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    image[278:321, 285:315] = 0
+    image = cv2.Canny(image, 100, 200)
+
     if resize is not None:
         image = cv2.resize(image, resize)
+
     return image / 255.0
+
 
 class MCarRacingEnv:
     def __init__(self, slide_window_length=3, image_resize=(96, 96)):
@@ -37,4 +45,8 @@ class MCarRacingEnv:
         return self.buffer, reward, done, info
 
     def render(self, mode="human"):
-        self.env.render(mode=mode)
+        img = self.env.render(mode="rgb_array")
+        cv2.imshow("Game", img)
+        img = image_preprocess(img, resize=np.array(self.image_resize) * 5)
+        cv2.imshow("Processed",img)
+        cv2.waitKey(30)

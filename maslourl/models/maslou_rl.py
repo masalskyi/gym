@@ -183,15 +183,19 @@ class MaslouRLModelDDPGContinuous(ABC):
         self.actor.save(path_without_ext + "_actor." + path[-1])
         self.critic.save(path_without_ext + "_critic." + path[-1])
 
+        self.actor_target.save(path_without_ext + "_actor_t." + path[-1])
+        self.critic_target.save(path_without_ext + "_critic_t." + path[-1])
+
     def load_model(self, model_file, prepare_target=False):
         actor_model_path = model_file + "_actor.h5"
         critic_model_path = model_file + "_critic.h5"
+        actor_t_model_path = model_file + "_actor_t.h5"
+        critic_t_model_path = model_file + "_critic_t.h5"
         self.actor = load_model(actor_model_path)
         self.critic = load_model(critic_model_path)
         if prepare_target:
-            self.actor_target = self.build_actor_model()
-            self.critic_target = self.build_critic_model()
-            self.update_target_models(tau=1)
+            self.actor_target = load_model(actor_t_model_path)
+            self.critic_target = load_model(critic_t_model_path)
 
     def update_target_models(self, tau):
         weights = []
@@ -295,14 +299,12 @@ class MaslouRLModelDDPGContinuous(ABC):
                 action = np.squeeze(action)
                 state, reward, done, info = self.env.step(action)
                 episode_reward += reward
-                if step == max_steps_per_episode:
-                    print(f"Episode reached the maximum number of steps. {max_steps_per_episode}")
-                    done = True
+
                 if done:
                     self.env.render()
                     break
             print(
-                f"episode {episode} finished in {step} steps with reward {episode_reward[0]:.2f}. "
+                f"episode {episode} finished in {step} steps with reward {np.array([episode_reward])[0]:.2f}. "
                 f"And took: {(time() - episode_start_time):.2f} seconds. ")
             rewards.append(episode_reward)
         print("Average reward ", np.mean(rewards))
