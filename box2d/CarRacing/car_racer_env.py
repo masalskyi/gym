@@ -27,7 +27,7 @@ class MCarRacingEnv:
         self.image_resize = image_resize
         self.buffer = np.zeros((slide_window_length, *image_resize))
         self.observation_space = Box(low=0, high=1, shape=self.buffer.shape)
-        self.action_space = self.env.action_space
+        self.action_space = Box(low=-1, high=1, shape=(2,))
 
     def reset(self):
         img = self.env.reset()
@@ -38,6 +38,7 @@ class MCarRacingEnv:
         return self.buffer
 
     def step(self, action):
+        action = self.process_action(action)
         new_image, reward, done, info = self.env.step(action)
         new_image = image_preprocess(new_image, resize=self.image_resize)
         self.buffer[:-1] = self.buffer[1:]
@@ -48,5 +49,8 @@ class MCarRacingEnv:
         img = self.env.render(mode="rgb_array")
         cv2.imshow("Game", img)
         img = image_preprocess(img, resize=np.array(self.image_resize) * 5)
-        cv2.imshow("Processed",img)
+        cv2.imshow("Processed", img)
         cv2.waitKey(30)
+
+    def process_action(self, action):
+        return np.array([action[0], np.clip(action[1], 0, 1), -np.clip(action[1], -1, 0)])
