@@ -3,11 +3,14 @@ import gym
 import numpy as np
 import cv2
 
+
 def image_preprocess(image, rgb_2_bgr=True, resize=None):
     image = image[:-50]
 
-    image[np.where((np.logical_and(image >= [101, 203, 101], image <= [101, 230, 101])).all(axis=2))] = np.array([101, 203, 101])
-    image[np.where((np.logical_and(image >= [101, 101, 101], image <= [106, 106, 106])).all(axis=2))] = np.array([106, 106, 106])
+    image[np.where((np.logical_and(image >= [101, 203, 101], image <= [101, 230, 101])).all(axis=2))] = np.array(
+        [101, 203, 101])
+    image[np.where((np.logical_and(image >= [101, 101, 101], image <= [106, 106, 106])).all(axis=2))] = np.array(
+        [106, 106, 106])
     if rgb_2_bgr:
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -15,7 +18,6 @@ def image_preprocess(image, rgb_2_bgr=True, resize=None):
     if resize is not None:
         image = cv2.resize(image, resize)
     image = cv2.Canny(image, 100, 200)
-
 
     return image / 255.0
 
@@ -32,8 +34,7 @@ class MCarRacingEnv:
     def reset(self):
         img = self.env.reset()
         img = image_preprocess(img, resize=self.image_resize)
-        del self.buffer
-        self.buffer = np.zeros((self.slide_window_length, *self.image_resize))
+        self.buffer *= 0
         self.buffer[-1] = img
         return self.buffer
 

@@ -135,17 +135,21 @@ class MaslouRLModel2QDiscrete(ABC):
         self.Q_target.set_weights(self.Q_eval.get_weights())
 
     def load_model(self, model_file, prepare_target=False):
-        self.Q_eval = load_model(model_file)
+        path = model_file.split(".")
+        path_without_ext = ".".join(path[:-1])
+        self.Q_eval = load_model(path_without_ext + "." + path[-1])
         if prepare_target:
-            self.Q_target = self.build_model()
-            self.update_target_model()
+            self.Q_target = load_model(path_without_ext + "_t." + path[-1])
 
     @abstractmethod
     def build_model(self):
         raise NotImplementedError("build model must be implemented in child")
 
     def save_model(self, model_file):
-        self.Q_eval.save(model_file)
+        path = model_file.split(".")
+        path_without_ext = ".".join(path[:-1])
+        self.Q_eval.save(path_without_ext + "." + path[-1])
+        self.Q_target.save(path_without_ext + "_t." + path[-1])
 
 
 class MaslouRLModelDDPGContinuous(ABC):

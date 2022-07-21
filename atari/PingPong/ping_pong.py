@@ -1,8 +1,8 @@
 # import os
 # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-from car_racer_env import MCarRacingEnv
-from car_racer_model import CarRacerModel
+from ping_pong_env import PingPongEnv
+from ping_pong_model import PingPongModel
 from maslourl.trackers.file_logger import FileLogger
 import numpy as np
 import tensorflow as tf
@@ -22,19 +22,19 @@ if gpus:
 
 replay_buffer_size = 10000
 training_batch_size = 64
-max_episodes = 3000
-max_steps = 1500
+max_episodes = 1000
+max_steps = 3000
+target_network_replace_frequency_steps = 250
 model_backup_frequency_episodes = 25
+starting_epsilon = 1
+minimum_epsilon = 0.01
+epsilon_decay = 0.9998
 discount_factor = 0.99
-tau = 0.005
-noise = [0.1, 0.4]
-train_every_step = 1
 
-env = MCarRacingEnv(slide_window_length=2, image_resize=(64, 64))
-agent = CarRacerModel(env, replay_buffer_size=replay_buffer_size)
+env = PingPongEnv(slide_window_length=4, image_resize=(80, 80), skip_steps=4)
+agent = PingPongModel(env, replay_buffer_size=replay_buffer_size)
 agent.summary()
-agent.train(episodes=max_episodes, max_steps_for_episode=max_steps, train_every_step=train_every_step, noise=noise,
-            tau=tau,
+agent.train(episodes=max_episodes, max_steps_for_episode=max_steps, starting_epsilon=starting_epsilon, epsilon_decay=epsilon_decay, epsilon_min=minimum_epsilon,
             training_batch_size=training_batch_size, discount_factor=discount_factor,
             model_backup_frequency_episodes=model_backup_frequency_episodes, path_to_back_up="./back_ups/",
             episodes_for_average_tracking=50, file_logger=FileLogger("./logging/log1.csv"))
