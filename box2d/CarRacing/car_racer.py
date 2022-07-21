@@ -27,17 +27,17 @@ max_steps = 1500
 model_backup_frequency_episodes = 25
 discount_factor = 0.99
 tau = 0.005
-noise = [0.1, 0.5]
-train_every_step = 4
+noise = [0.1, 0.4]
+train_every_step = 1
 
 env = MCarRacingEnv(slide_window_length=2, image_resize=(64, 64))
 agent = CarRacerModel(env, replay_buffer_size=replay_buffer_size)
-# agent.summary()
-agent.train(episodes=max_episodes, max_steps_for_episode=max_steps, train_every_step=train_every_step, noise=noise,
-            tau=tau,
-            training_batch_size=training_batch_size, discount_factor=discount_factor,
-            model_backup_frequency_episodes=model_backup_frequency_episodes, path_to_back_up="./back_ups/",
-            episodes_for_average_tracking=50, file_logger=FileLogger("./logging/log1.csv"))
-# agent.test(1, 1000, visualize=True)
+agent.summary()
+# agent.train(episodes=max_episodes, max_steps_for_episode=max_steps, train_every_step=train_every_step, noise=noise,
+#             tau=tau,
+#             training_batch_size=training_batch_size, discount_factor=discount_factor,
+#             model_backup_frequency_episodes=model_backup_frequency_episodes, path_to_back_up="./back_ups/",
+#             episodes_for_average_tracking=50, file_logger=FileLogger("./logging/log1.csv"))
+agent.test(1, 1000, visualize=True)
 # t = np.zeros((1,4,80,80))
 # print(agent.actor.predict(t))

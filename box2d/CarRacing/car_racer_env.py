@@ -12,10 +12,10 @@ def image_preprocess(image, rgb_2_bgr=True, resize=None):
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     image[278:321, 285:315] = 0
-    image = cv2.Canny(image, 100, 200)
-
     if resize is not None:
         image = cv2.resize(image, resize)
+    image = cv2.Canny(image, 100, 200)
+
 
     return image / 255.0
 
@@ -48,7 +48,7 @@ class MCarRacingEnv:
     def render(self, mode="human"):
         img = self.env.render(mode="rgb_array")
         cv2.imshow("Game", img)
-        img = image_preprocess(img, resize=np.array(self.image_resize) * 5)
+        img = image_preprocess(img, resize=np.array(self.image_resize))
         cv2.imshow("Processed", img)
         cv2.waitKey(30)
 
