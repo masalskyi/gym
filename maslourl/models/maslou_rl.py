@@ -52,9 +52,6 @@ class MaslouRLModel2QDiscrete(ABC):
                 action = self.choose_action(state)
                 new_state, reward, done, info = self.env.step(action)
                 episode_reward += reward
-                if step == max_steps_for_episode:
-                    print(f"Episode reached the maximum number of steps. {max_steps_for_episode}")
-                    done = True
                 self.remember(state, action, reward, new_state, done)
                 state = new_state
                 self.learn(training_batch_size, discount_factor)
@@ -85,7 +82,7 @@ class MaslouRLModel2QDiscrete(ABC):
             for step in range(max_steps_per_episode):
                 if visualize:
                     self.env.render()
-                action = self.choose_action(state)
+                action = self.choose_action(state, test=True)
                 state, reward, done, info = self.env.step(action)
                 episode_reward += reward
                 if step == max_steps_per_episode:
@@ -120,7 +117,7 @@ class MaslouRLModel2QDiscrete(ABC):
             q_pred = self.Q_eval.predict(state, verbose=0)
             max_actions = np.argmax(q_eval, axis=1)
 
-            q_y = q_pred
+            q_y = q_pred[:]
             batch_indices = np.arange(batch_size, dtype=np.int32)
             q_y[batch_indices, action_indices] = reward + discount_factor * \
                                                  q_target[batch_indices, max_actions.astype(int)] * (1-done)

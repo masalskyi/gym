@@ -17,7 +17,7 @@ def image_preprocess(image, rgb_2_bgr=True, resize=None):
 
 class PingPongEnv:
     def __init__(self, slide_window_length=3, image_resize=(96, 96), skip_steps = 4):
-        self.env = gym.make("Pong-v4")
+        self.env = gym.make('PongNoFrameskip-v4')
         self.slide_window_length = slide_window_length
         self.image_resize = image_resize
         self.buffer = np.zeros((slide_window_length, *image_resize))
@@ -46,7 +46,8 @@ class PingPongEnv:
 
     def render(self, mode="human"):
         img = self.env.render(mode="rgb_array")
-        cv2.imshow("Game", img)
+        img1 = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        cv2.imshow("Game", img1)
         img = image_preprocess(img, self.image_resize)
         cv2.imshow("Processed", img)
         cv2.waitKey(30)
