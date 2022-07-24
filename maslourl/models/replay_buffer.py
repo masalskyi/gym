@@ -14,12 +14,7 @@ class ReplayBuffer(object):
         index = self.mem_cntr % self.mem_size
         self.state_memory[index] = state.reshape(self.input_shape)
         self.new_state_memory[index] = state_.reshape(self.input_shape)
-        if self.discrete:
-            actions = np.zeros(self.action_memory.shape[1])
-            actions[action] = 1.0
-            self.action_memory[index] = actions
-        else:
-            self.action_memory[index] = action
+        self.action_memory[index] = action
         self.reward_memory[index] = reward
         self.terminal_memory[index] = done
         self.mem_cntr += 1
@@ -37,7 +32,7 @@ class ReplayBuffer(object):
     def clear(self):
         self.state_memory = np.zeros((self.mem_size, *self.input_shape))
         self.new_state_memory = np.zeros((self.mem_size, *self.input_shape))
-        dtype = np.int16 if self.discrete else np.float
-        self.action_memory = np.zeros((self.mem_size, self.n_actions), dtype=dtype)
+        dtype = np.int16 if self.discrete else float
+        self.action_memory = np.zeros(self.mem_size, dtype=dtype)
         self.reward_memory = np.zeros(self.mem_size)
-        self.terminal_memory = np.zeros(self.mem_size, dtype=np.bool)
+        self.terminal_memory = np.zeros(self.mem_size, dtype=int)

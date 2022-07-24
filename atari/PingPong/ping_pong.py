@@ -6,7 +6,6 @@ from ping_pong_model import PingPongModel
 from maslourl.trackers.file_logger import FileLogger
 import numpy as np
 import tensorflow as tf
-from temp import *
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:

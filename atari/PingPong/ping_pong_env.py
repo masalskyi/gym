@@ -30,7 +30,7 @@ class PingPongEnv:
         img = image_preprocess(img, self.image_resize)
         self.buffer *= 0
         self.buffer[-1] = img
-        return self.buffer
+        return self.get_buffer()
 
     def step(self, action):
         rewards = 0
@@ -42,13 +42,11 @@ class PingPongEnv:
         new_image = image_preprocess(new_image, self.image_resize)
         self.buffer[:-1] = self.buffer[1:]
         self.buffer[-1] = new_image
-        return self.buffer, rewards, done, info
+        return self.get_buffer(), rewards, done, info
 
-    def render(self, mode="human"):
-        img = self.env.render(mode="rgb_array")
-        img1 = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        cv2.imshow("Game", img1)
-        img = image_preprocess(img, self.image_resize)
-        cv2.imshow("Processed", img)
-        cv2.waitKey(30)
+    def seed(self, seed_):
+        self.env.seed(seed_)
+
+    def get_buffer(self):
+        return np.copy(self.buffer)
 

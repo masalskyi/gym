@@ -109,7 +109,7 @@ class MaslouRLModel2QDiscrete(ABC):
     def learn(self, batch_size, discount_factor):
         if self.memory.mem_cntr > batch_size:
             state, action, reward, new_state, done = self.memory.sample_buffer(batch_size)
-            action_indices = np.dot(action, self.action_space)
+            action_indices = action
 
             q_eval = self.Q_eval.predict(new_state, verbose=0)
             q_target = self.Q_target.predict(new_state, verbose=0)
@@ -123,7 +123,7 @@ class MaslouRLModel2QDiscrete(ABC):
                                                  q_target[batch_indices, max_actions.astype(int)] * (1-done)
             _ = self.Q_eval.fit(state, q_y, verbose=0)
 
-            self.epsilon = self.epsilon * self.epsilon_decay if self.epsilon > self.epsilon_min else self.epsilon_min
+            self.epsilon = self.epsilon - self.epsilon_decay if self.epsilon > self.epsilon_min else self.epsilon_min
 
             if self.memory.mem_cntr % self.target_network_replace_frequency_steps == 0:
                 self.update_target_model()
