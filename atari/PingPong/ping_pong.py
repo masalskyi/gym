@@ -28,7 +28,7 @@ target_network_replace_frequency_steps = 1000
 model_backup_frequency_episodes = 25
 starting_epsilon = 1
 minimum_epsilon = 0.02
-epsilon_decay = 0.99995
+epsilon_decay = 1e-5
 discount_factor = 0.99
 
 env = PingPongEnv(slide_window_length=4, image_resize=(80, 80), skip_steps=4)

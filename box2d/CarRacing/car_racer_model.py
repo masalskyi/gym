@@ -71,5 +71,5 @@ class CarRacerModel(MaslouRLModelDDPGContinuous):
         x = layers.Dense(128, activation="relu")(x)
         output = layers.Dense(self.n_actions, activation="tanh")(x)
         model = Model(inputs=state_input, outputs=output, name="CarRacer_actor")
-        model.compile(optimizer=Adam(learning_rate=0.00001), loss="mse")
+        model.compile(optimizer=Adam(learning_rate=0.0001), loss="mse")
         return model

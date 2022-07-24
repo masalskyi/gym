@@ -36,7 +36,7 @@ class MCarRacingEnv:
         img = image_preprocess(img, resize=self.image_resize)
         self.buffer *= 0
         self.buffer[-1] = img
-        return self.buffer
+        return self.get_buffer()
 
     def step(self, action):
         action = self.process_action(action)
@@ -44,7 +44,7 @@ class MCarRacingEnv:
         new_image = image_preprocess(new_image, resize=self.image_resize)
         self.buffer[:-1] = self.buffer[1:]
         self.buffer[-1] = new_image
-        return self.buffer, reward, done, info
+        return self.get_buffer(), reward, done, info
 
     def render(self, mode="human"):
         img = self.env.render(mode="rgb_array")
@@ -55,3 +55,6 @@ class MCarRacingEnv:
 
     def process_action(self, action):
         return np.array([action[0], np.clip(action[1], 0, 1), -np.clip(action[1], -1, 0)])
+
+    def get_buffer(self):
+        return np.copy(self.buffer)
