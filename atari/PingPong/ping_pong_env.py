@@ -47,6 +47,14 @@ class PingPongEnv:
     def seed(self, seed_):
         self.env.seed(seed_)
 
+    def render(self, mode="human"):
+        img = self.env.render(mode="rgb_array")
+        img1 = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        cv2.imshow("Game", img1)
+        img = image_preprocess(img, self.image_resize)
+        cv2.imshow("Processed", img)
+        cv2.waitKey(30)
+
     def get_buffer(self):
         return np.copy(self.buffer)
 
