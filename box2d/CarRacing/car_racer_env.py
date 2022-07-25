@@ -17,7 +17,7 @@ def image_preprocess(image, rgb_2_bgr=True, resize=None):
     image[278:321, 285:315] = 0
     if resize is not None:
         image = cv2.resize(image, resize)
-    image = cv2.Canny(image, 100, 200)
+    # image = cv2.Canny(image, 100, 200)
 
     return image / 255.0
 

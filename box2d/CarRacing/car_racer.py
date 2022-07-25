@@ -21,23 +21,23 @@ if gpus:
         print(e)
 
 replay_buffer_size = 10000
-training_batch_size = 64
+training_batch_size = 32
 max_episodes = 3000
 max_steps = 1500
 model_backup_frequency_episodes = 50
-discount_factor = 0.99
+discount_factor = 0.999
 tau = 0.005
-noise = [0.1, 0.4]
+noise = [0.05, 0.1]
 train_every_step = 1
 
-env = MCarRacingEnv(slide_window_length=2, image_resize=(80, 80), skip_steps=3)
+env = MCarRacingEnv(slide_window_length=2, image_resize=(96, 96), skip_steps=1)
 agent = CarRacerModel(env, replay_buffer_size=replay_buffer_size)
 agent.summary()
 agent.train(episodes=max_episodes, max_steps_for_episode=max_steps, train_every_step=train_every_step, noise=noise,
             tau=tau,
             training_batch_size=training_batch_size, discount_factor=discount_factor,
             model_backup_frequency_episodes=model_backup_frequency_episodes, path_to_back_up="./back_ups/",
-            episodes_for_average_tracking=50, file_logger=FileLogger("./logging/log1.csv"))
+            episodes_for_average_tracking=50, file_logger=FileLogger("./logging/log2.csv"))
 # agent.test(1, 1000, visualize=True)
 # t = np.zeros((1,4,80,80))
 # print(agent.actor.predict(t))
