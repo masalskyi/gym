@@ -53,11 +53,13 @@ class MCarRacingEnv:
         return self.get_buffer(), rewards, done, info
 
     def render(self, mode="human"):
-        img = self.env.render(mode="rgb_array")
-        cv2.imshow("Game", img)
-        img = image_preprocess(img, resize=np.array(self.image_resize))
+        img1 = self.env.render(mode="rgb_array")
+        cv2.imshow("Game", img1)
+        img_res = np.copy(img1)
+        img = image_preprocess(img1, resize=np.array(self.image_resize))
         cv2.imshow("Processed", img)
         cv2.waitKey(30)
+        return img_res
 
     def process_action(self, action):
         return np.array([action[0], np.clip(action[1], 0, 1), -np.clip(action[1], -1, 0)])
