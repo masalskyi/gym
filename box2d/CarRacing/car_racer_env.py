@@ -23,13 +23,14 @@ def image_preprocess(image, rgb_2_bgr=True, resize=None):
 
 
 class MCarRacingEnv:
-    def __init__(self, slide_window_length=3, image_resize=(96, 96)):
+    def __init__(self, slide_window_length=3, image_resize=(96, 96), skip_steps = 4):
         self.env = gym.make("CarRacing-v2")
         self.slide_window_length = slide_window_length
         self.image_resize = image_resize
         self.buffer = np.zeros((slide_window_length, *image_resize))
         self.observation_space = Box(low=0, high=1, shape=self.buffer.shape)
         self.action_space = Box(low=-1, high=1, shape=(2,))
+        self.skip_steps = skip_steps
 
     def reset(self):
         img = self.env.reset()
@@ -40,11 +41,16 @@ class MCarRacingEnv:
 
     def step(self, action):
         action = self.process_action(action)
-        new_image, reward, done, info = self.env.step(action)
+        rewards = 0
+        for i in range(self.skip_steps):
+            new_image, reward, done, info = self.env.step(action)
+            rewards += reward
+            if done:
+                break
         new_image = image_preprocess(new_image, resize=self.image_resize)
         self.buffer[:-1] = self.buffer[1:]
         self.buffer[-1] = new_image
-        return self.get_buffer(), reward, done, info
+        return self.get_buffer(), rewards, done, info
 
     def render(self, mode="human"):
         img = self.env.render(mode="rgb_array")

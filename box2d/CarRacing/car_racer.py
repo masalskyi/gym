@@ -30,7 +30,7 @@ tau = 0.005
 noise = [0.1, 0.4]
 train_every_step = 1
 
-env = MCarRacingEnv(slide_window_length=2, image_resize=(64, 64))
+env = MCarRacingEnv(slide_window_length=2, image_resize=(80, 80), skip_steps=3)
 agent = CarRacerModel(env, replay_buffer_size=replay_buffer_size)
 agent.summary()
 agent.train(episodes=max_episodes, max_steps_for_episode=max_steps, train_every_step=train_every_step, noise=noise,
