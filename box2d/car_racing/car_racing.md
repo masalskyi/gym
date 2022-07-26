@@ -72,8 +72,7 @@ The results of training are following:
 ![training_results_1.png](training_results_1.png)
 There is also a quite interesting behaviour of an agent. See a video:
 <video width="320" height="240" controls>
-  <source src="car_racer_drift.mp4" type="video/mp4">
-Your browser does not support the video tag.
+  <source src="https://masalskyi.github.io/gym/box2d/car_racing/car_racer_drift.mp4" type="video/mp4">
 </video>
 
 The problem can be in several places. Not stability of ddpg method at all. The solutions will be to use
