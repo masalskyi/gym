@@ -13,7 +13,7 @@ All algorithms are created in python + tensorflow + keras + keras-rl
 ## [Box2d](https://www.gymlibrary.ml/environments/box2d/)
 <ul>
     <li><a href="box2d/lunar_lander/lunar_lander">Lunar lander</a></li>
-    <li><a href="box2d/lunar_lander/lunar_lander">Lunar lander</a></li>
+    <li><a href="box2d/car_racing/car_racing">Car racing</a></li>
 </ul>
 
 
