@@ -71,7 +71,9 @@ train_every_step = 1
 The results of training are following:
 ![training_results_1.png](training_results_1.png)
 There is also a quite interesting behaviour of an agent. See a video:
-<video src="car_racer_drift.mp4" data-canonical-src="car_racer_drift.mp4" controls="controls" muted="muted" class="d-block rounded-bottom-2 width-fit" style="max-height:640px;">
+<video width="320" height="240" controls>
+  <source src="car_racer_drift.mp4" type="video/mp4">
+Your browser does not support the video tag.
 </video>
 
 The problem can be in several places. Not stability of ddpg method at all. The solutions will be to use
