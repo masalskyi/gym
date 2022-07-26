@@ -71,9 +71,10 @@ train_every_step = 1
 The results of training are following:
 ![training_results_1.png](training_results_1.png)
 There is also a quite interesting behaviour of an agent. See a video:
-<video width="320" height="240" controls>
-  <source src="https://masalskyi.github.io/gym/box2d/car_racing/car_racer_drift.mp4" type="video/mp4">
-</video>
+
+<p align="center">
+<iframe width="560" height="315" src="https://www.youtube.com/embed/ay-UZ1bjXwc" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</p>
 
 The problem can be in several places. Not stability of ddpg method at all. The solutions will be to use
 another method instead. The second one can be a hyper-parameters tuning.
