@@ -7,3 +7,7 @@
 *.npz
 *.ipynb
 *.mp4
+*wandb*/
+*.pt
+run*
+*.meta.json
