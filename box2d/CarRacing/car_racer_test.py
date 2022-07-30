@@ -20,9 +20,9 @@ if gpus:
         # Virtual devices must be set before GPUs have been initialized
         print(e)
 
-env = MCarRacingEnv(slide_window_length=2, image_resize=(80, 80), skip_steps=3)
+env = MCarRacingEnv(slide_window_length=2, image_resize=(96, 96), skip_steps=3)
 agent = CarRacerModel(env, train_state=False, replay_buffer_size=0)
-agent.load_model("./back_ups/model_750.h5")
+# agent.load_model("./back_ups/model_750.h5")
 
 agent.test(1, 1000, visualize=True)
 # t = np.zeros((1,4,80,80))
