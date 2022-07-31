@@ -97,6 +97,8 @@ def parse_args():
     parser.add_argument('--save-best-to-wandb', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
                         help="toggle whether to save the best model to w&b")
     parser.add_argument('--learning_rate', type=float, default=2.5e-4, help="the learning rate of the optimizer")
+    parser.add_argument('--verbose', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
+                        help="toggle whether to verbose on console")
     parser.add_argument('--seed', type=int, default=1, help="seed of the experiment")
     parser.add_argument('--total-timesteps', type=int, default=10000000, help="total timesteps of the experiment")
     parser.add_argument('--torch-deterministic', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
@@ -136,7 +138,6 @@ def parse_args():
                         help="coefficient for entropy loss")
     parser.add_argument('--vf-coef', type=float, default=0.5,
                         help="coefficient for loss of value function")
-
     parser.add_argument('--max-grad-norm', type=float, default=0.5,
                         help="the maximum norm of gradient clipping")
     args = parser.parse_args()
