@@ -1,3 +1,4 @@
+import datetime
 import time
 
 import tensorflow as tf
@@ -51,13 +52,26 @@ class MaslouRLModelPPODiscrete(ABC):
               total_timesteps=1000000, anneal_lr=True, gae=True,
               discount_gamma=0.99, gae_lambda=0.95, update_epochs=4,
               minibatches=4, norm_adv=True, clip_coef=0.2, clip_vloss=True,
-              ent_coef=0.01, vf_coef=0.5):
+              ent_coef=0.01, vf_coef=0.5, track=False, wandb_project_name=None, wandb_entity=None, config=None):
         batch_size = num_steps * num_envs
         envs = gym.vector.SyncVectorEnv([self.make_env(seed + i,
                                                        i,
                                                        capture_video,
                                                        capture_every_n_video,
                                                        run_name) for i in range(num_envs)])
+        if track:
+            import wandb
+
+            wandb.init(project=wandb_project_name,
+                       entity=wandb_entity,
+                       sync_tensorboard=True,
+                       config=vars(config),
+                       name=run_name,
+                       monitor_gym=True,
+                       save_code=True)
+        current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        train_log_dir = 'logs/' + run_name
+        summary_writer = tf.summary.create_file_writer(train_log_dir)
 
         random.seed(seed)
         np.random.seed(seed)
@@ -79,6 +93,7 @@ class MaslouRLModelPPODiscrete(ABC):
         num_updates = total_timesteps // batch_size
 
         for update in range(1, num_updates + 1):
+            summary_writer.flush()
             if anneal_lr:
                 frac = 1.0 - (update - 1) / num_updates
                 lrnow = frac * learning_rate
@@ -99,6 +114,9 @@ class MaslouRLModelPPODiscrete(ABC):
                 if "episode" in info.keys():
                     for item in info["episode"]:
                         if item is not None:
+                            with summary_writer.as_default():
+                                tf.summary.scalar("charts/episodic_return", item["r"], global_step)
+                                tf.summary.scalar("charts/episodic_length", item["l"], global_step)
                             print(f"global_step={global_step}, episodic_return={item['r']}")
                             break
 
