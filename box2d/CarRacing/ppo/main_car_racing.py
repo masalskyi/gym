@@ -4,7 +4,7 @@ from distutils.util import strtobool
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.distributions.categorical import Categorical
+from torch.distributions.normal import Normal
 from stable_baselines3.common.atari_wrappers import (
     NoopResetEnv,
     MaxAndSkipEnv,
@@ -15,14 +15,16 @@ from stable_baselines3.common.atari_wrappers import (
 from maslourl.models.ppo_torch import MaslouTorchAgent, MaslouPPO
 import gym
 
+
 def layer_init(layer, std=np.sqrt(2), bias_const=0):
     nn.init.orthogonal_(layer.weight, std)
     nn.init.constant_(layer.bias, bias_const)
     return layer
 
-class BreakoutTorchAgent(MaslouTorchAgent):
+
+class CarRacerTorchAgent(MaslouTorchAgent):
     def __init__(self, envs: gym.vector.VectorEnv):
-        super(BreakoutTorchAgent, self).__init__()
+        super(CarRacerTorchAgent, self).__init__()
         self.network = nn.Sequential(
             layer_init(nn.Conv2d(4, 32, 8, stride=4)),
             nn.ReLU(),
@@ -35,30 +37,35 @@ class BreakoutTorchAgent(MaslouTorchAgent):
             nn.ReLU()
         )
         self.critic = layer_init(nn.Linear(512, 1), std=1.)
-        self.actor = layer_init(nn.Linear(512, envs.single_action_space.n), std=0.01)
+        self.actor_means = layer_init(nn.Linear(512, np.prod(envs.single_action_space.shape)), std=0.01)
+        self.actor_logstd = nn.Parameter(torch.zeros(1, np.prod(envs.single_action_space.shape)))
 
     def get_value(self, x):
         return self.critic(self.network(x / 255.0))
 
     def get_action_and_value(self, x, action=None):
         hidden = self.network(x / 255.0)
-        logits = self.actor(hidden)
-        probs = Categorical(logits=logits)
+        action_mean = self.actor_means(hidden)
+        action_logstd = self.actor_logstd.expand_as(action_mean)
+        action_std = torch.exp(action_logstd)
+        probs = Normal(action_mean, action_std)
         if action is None:
             action = probs.sample()
-        return action, probs.log_prob(action), probs.entropy(), self.critic(hidden)
+        return action, probs.log_prob(action).sum(1), probs.entropy().sum(1), self.critic(hidden)
 
     def get_action_greedy(self, x):
         hidden = self.network(x / 255.0)
-        logits = self.actor(hidden)
-        return torch.argmax(logits, dim=1)
+        action_mean = self.actor(hidden)
+        return action_mean
 
-class BreakoutPPO(MaslouPPO):
+
+class CarRacerPPO(MaslouPPO):
     def __init__(self, args):
-        super(BreakoutPPO, self).__init__(args)
+        super(CarRacerPPO, self).__init__(args, discrete=False)
+        print(self.agent)
 
     def build_agent(self) -> MaslouTorchAgent:
-        return BreakoutTorchAgent(self.envs)
+        return CarRacerTorchAgent(self.envs)
 
     def make_env(self, gym_id, seed, idx, capture_video, capture_every_n_episode, run_name):
         def thunk():
@@ -69,11 +76,7 @@ class BreakoutPPO(MaslouPPO):
                 if idx == 0:
                     env = gym.wrappers.RecordVideo(env, f"videos/{run_name}",
                                                    episode_trigger=lambda t: t % capture_every_n_episode == 0)
-            env = NoopResetEnv(env, noop_max=30)
             env = MaxAndSkipEnv(env, skip=4)
-            env = EpisodicLifeEnv(env)
-            if "FIRE" in env.unwrapped.get_action_meanings():
-                env = FireResetEnv(env)
             env = ClipRewardEnv(env)
             env = gym.wrappers.ResizeObservation(env, (84, 84))
             env = gym.wrappers.GrayScaleObservation(env)
@@ -86,19 +89,20 @@ class BreakoutPPO(MaslouPPO):
 
         return thunk
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp_name', type=str, default=os.path.basename(__file__).rstrip(".py"),
                         help="The name of this experiment")
-    parser.add_argument('--gym-id', type=str, default="BreakoutNoFrameskip-v4",
+    parser.add_argument('--gym-id', type=str, default="CarRacing-v2",
                         help='the id of the openai gym environment')
+    parser.add_argument('--verbose', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
+                        help="toggle whether to verbose")
     parser.add_argument('--average-reward-2-save', type=int, default=20,
                         help="Tracking the average reward with specified length and save the best model")
     parser.add_argument('--save-best-to-wandb', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
                         help="toggle whether to save the best model to w&b")
     parser.add_argument('--learning_rate', type=float, default=2.5e-4, help="the learning rate of the optimizer")
-    parser.add_argument('--verbose', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
-                        help="toggle whether to verbose on console")
     parser.add_argument('--seed', type=int, default=1, help="seed of the experiment")
     parser.add_argument('--total-timesteps', type=int, default=10000000, help="total timesteps of the experiment")
     parser.add_argument('--torch-deterministic', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
@@ -107,7 +111,7 @@ def parse_args():
                         help="if toggled, cuda will not be enabled by default")
     parser.add_argument('--track', type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="if toggled, this experiment will be tracked with w&b")
-    parser.add_argument('--wandb-project-name', type=str, default="rl-ppo-breakout", help="the w&b project name")
+    parser.add_argument('--wandb-project-name', type=str, default="rl-ppo-carracing", help="the w&b project name")
     parser.add_argument('--wandb-entity', type=str, default=None, help="the entity (team) of wandb's project")
     parser.add_argument('--capture-video', type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="whether to capture videos of the agent perfomance")
@@ -138,6 +142,7 @@ def parse_args():
                         help="coefficient for entropy loss")
     parser.add_argument('--vf-coef', type=float, default=0.5,
                         help="coefficient for loss of value function")
+
     parser.add_argument('--max-grad-norm', type=float, default=0.5,
                         help="the maximum norm of gradient clipping")
     args = parser.parse_args()
@@ -148,6 +153,5 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    breakout_ppo = BreakoutPPO(args)
+    breakout_ppo = CarRacerPPO(args)
     breakout_ppo.train()
-
