@@ -1,7 +1,7 @@
 import tensorflow.keras as keras
 import tensorflow.keras.layers as layers
 from tensorflow.keras.initializers import Orthogonal
-from maslourl.models.ppo_tf import MaslouRLModelPPODiscrete
+from ppo_tf import MaslouRLModelPPODiscrete
 import gym
 import numpy as np
 class BreakoutAgent(MaslouRLModelPPODiscrete):
@@ -26,6 +26,7 @@ class BreakoutAgent(MaslouRLModelPPODiscrete):
         x = layers.Conv2D(filters=32, kernel_size=8, strides=4, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2)), data_format='channels_first')(input)
         x = layers.Conv2D(filters=64, kernel_size=4, strides=2, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2)), data_format='channels_first')(x)
         x = layers.Conv2D(filters=64, kernel_size=3, strides=1, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2)), data_format='channels_first')(x)
+        x = layers.Flatten()(x)
         output = layers.Dense(units=self.feature_size, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2))) (x)
         model = keras.Model(inputs=input, outputs=output, name="FeatureExtractor")
         return model
@@ -43,3 +44,5 @@ class BreakoutAgent(MaslouRLModelPPODiscrete):
         return model
 
 agent = BreakoutAgent()
+agent.summary()
+agent.train()

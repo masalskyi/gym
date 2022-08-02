@@ -99,7 +99,8 @@ class MaslouRLModelPPODiscrete(ABC):
 
                 next_obs, reward, done, info = envs.step(action)
                 rewards[step] = reward
-                for item in info:
-                    if "episode" in item.keys():
-                        print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
-                        break
+                print(info)
+                # for item in info:
+                #     if "episode" in item.keys():
+                #         print(f"global_step={global_step}, episodic_return={item['episode']['r']}")
+                #         break
