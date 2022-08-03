@@ -52,7 +52,7 @@ class MaslouRLModelPPODiscrete(ABC):
               total_timesteps=1000000, anneal_lr=True, gae=True,
               discount_gamma=0.99, gae_lambda=0.95, update_epochs=4,
               minibatches=4, norm_adv=True, clip_coef=0.2, clip_vloss=True,
-              ent_coef=0.01, vf_coef=0.5, track=False, wandb_project_name=None, wandb_entity=None, config=None):
+              ent_coef=0.01, vf_coef=0.5, track=False, wandb_project_name=None, wandb_entity=None,max_grad_norm=0.5, config=None):
         batch_size = num_steps * num_envs
         envs = gym.vector.SyncVectorEnv([self.make_env(seed + i,
                                                        i,
@@ -93,6 +93,7 @@ class MaslouRLModelPPODiscrete(ABC):
         num_updates = total_timesteps // batch_size
 
         for update in range(1, num_updates + 1):
+            print(f"Start update, {update}")
             summary_writer.flush()
             if anneal_lr:
                 frac = 1.0 - (update - 1) / num_updates
@@ -109,8 +110,8 @@ class MaslouRLModelPPODiscrete(ABC):
                 actions[step] = action
                 logprobs[step] = logprob
 
-                next_obs, reward, done, info = envs.step(action)
-                rewards[step] = reward
+                next_obs, reward, done, info = envs.step(action.numpy())
+                rewards[step] = tf.squeeze(reward)
                 if "episode" in info.keys():
                     for item in info["episode"]:
                         if item is not None:
@@ -120,7 +121,7 @@ class MaslouRLModelPPODiscrete(ABC):
                             print(f"global_step={global_step}, episodic_return={item['r']}")
                             break
 
-            next_value = self.get_value(next_obs).numpy().reshape(1,-1)
+            next_value = tf.reshape(self.get_value(next_obs), (1, -1))
             if gae:
                 advantages = np.zeros_like(rewards)
                 lastgaelam = 0
@@ -184,8 +185,18 @@ class MaslouRLModelPPODiscrete(ABC):
                             v_loss = 0.5 * tf.math.reduce_mean((newvalue - b_returns[mb_inds])**2)
 
                         entropy_loss = tf.math.reduce_mean(entropy)
-                        loss = tf.cast(pg_loss, dtype=tf.float32) - ent_coef * tf.cast(entropy_loss, dtype=tf.float32) + \
-                               tf.cast(v_loss, dtype=tf.float32) * vf_coef
+                        loss = pg_loss - ent_coef * entropy_loss + v_loss * vf_coef
                         feature_network_gradient = tape.gradient(loss, self.model.trainable_variables)
+                        feature_network_gradient, _ = tf.clip_by_global_norm(feature_network_gradient, max_grad_norm)
                         optimizer.apply_gradients(zip(feature_network_gradient, self.model.trainable_variables))
 
+            y_pred, y_true = b_values, b_returns
+            var_y = np.var(y_true)
+            explained_var = np.nan if var_y == 0 else 1 - np.var(y_true - y_pred) / var_y
+            with summary_writer.as_default():
+                tf.summary.scalar("charts/learning_rate", optimizer._lr, global_step)
+                tf.summary.scalar("losses/value_loss", v_loss, global_step)
+                tf.summary.scalar("losses/policy_loss", pg_loss, global_step)
+                tf.summary.scalar("losses/entropy_loss", entropy_loss, global_step)
+                tf.summary.scalar("losses/explained_variance", explained_var, global_step)
+                tf.summary.scalar("charts/SPS", int(global_step / (time.time() - start_time)), global_step)
