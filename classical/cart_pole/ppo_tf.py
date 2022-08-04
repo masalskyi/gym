@@ -91,15 +91,13 @@ class MaslouRLModelPPODiscrete(ABC):
         next_obs = envs.reset()
         next_done = np.zeros(num_envs)
         num_updates = total_timesteps // batch_size
-
         for update in range(1, num_updates + 1):
-            print(f"Start update, {update}")
+            # print(f"Start update, {update}")
             summary_writer.flush()
             if anneal_lr:
                 frac = 1.0 - (update - 1) / num_updates
                 lrnow = frac * learning_rate
                 optimizer._lr = lrnow
-
             for step in range(0, num_steps):
                 global_step += num_envs
                 obs[step] = next_obs
@@ -111,6 +109,9 @@ class MaslouRLModelPPODiscrete(ABC):
                 logprobs[step] = logprob
 
                 next_obs, reward, done, info = envs.step(action.numpy())
+                # print(reward)
+                # exit(0)
+                next_done = done
                 rewards[step] = tf.squeeze(reward)
                 if "episode" in info.keys():
                     for item in info["episode"]:
@@ -122,6 +123,7 @@ class MaslouRLModelPPODiscrete(ABC):
                             break
 
             next_value = tf.reshape(self.get_value(next_obs), (1, -1))
+
             if gae:
                 advantages = np.zeros_like(rewards)
                 lastgaelam = 0
@@ -135,6 +137,7 @@ class MaslouRLModelPPODiscrete(ABC):
                     delta = rewards[t] + discount_gamma * nextvalues * nextnonterminal - values[t]
                     advantages[t] = lastgaelam = delta + discount_gamma * gae_lambda * nextnonterminal * lastgaelam
                 returns = advantages + values
+
             else:
                 returns = np.zeros_like(rewards)
                 for t in reversed(range(num_steps)):
@@ -147,48 +150,61 @@ class MaslouRLModelPPODiscrete(ABC):
                     returns[t] = rewards[t] + discount_gamma * nextnonterminal * next_return
                 advantages = returns - values
 
-            b_obs = obs.reshape((-1,) + envs.single_observation_space.shape)
-            b_logprobs = logprobs.reshape(-1)
-            b_actions = actions.reshape((-1,) + envs.single_action_space.shape)
-            b_advanatges = advantages.reshape(-1)
-            b_returns = returns.reshape(-1)
-            b_values = values.reshape(-1)
+            b_obs = tf.convert_to_tensor(obs.reshape((-1,) + envs.single_observation_space.shape), dtype=tf.float32)
+            b_logprobs = tf.convert_to_tensor(logprobs.reshape(-1), dtype=tf.float32)
+            b_actions = tf.convert_to_tensor(actions.reshape((-1,) + envs.single_action_space.shape), dtype=tf.int32)
+            b_advanatges = tf.convert_to_tensor(advantages.reshape(-1), dtype=tf.float32)
+            b_returns = tf.convert_to_tensor(returns.reshape(-1), dtype=tf.float32)
+            b_values = tf.convert_to_tensor(values.reshape(-1),  dtype=tf.float32)
 
             b_inds = np.arange(batch_size)
             minibatch_size = batch_size // minibatches
+
+            self.model.build(input_shape = (4,))
             for epoch in range(update_epochs):
                 np.random.shuffle(b_inds)
                 for start in range(0, batch_size, minibatch_size):
                     end = start + minibatch_size
-                    mb_inds = b_inds[start:end]
+                    mb_inds = tf.convert_to_tensor(b_inds[start:end], dtype=tf.int32)
+                    mb_obs = tf.gather(b_obs, indices=mb_inds)
+                    mb_actions = tf.gather(b_actions, indices=mb_inds)
+                    mb_logprobs = tf.gather(b_logprobs, indices=mb_inds)
+                    mb_advantages = tf.gather(b_advanatges, indices=mb_inds)
+                    mb_returns = tf.gather(b_returns, indices=mb_inds)
+                    mb_values = tf.gather(b_values, indices=mb_inds)
                     with tf.GradientTape() as tape:
-                        _, newlogprob, entropy, newvalue = self.get_action_and_value(b_obs[mb_inds], b_actions[mb_inds])
+                        _, newlogprob, entropy, newvalue = self.get_action_and_value(mb_obs, mb_actions)
 
-                        log_ratio = newlogprob - b_logprobs[mb_inds]
-                        ratio = np.exp(log_ratio)
+                        log_ratio = newlogprob - mb_logprobs
 
-                        mb_advantages = b_advanatges[mb_inds]
+                        ratio = tf.math.exp(log_ratio)
+
+
                         if norm_adv:
-                            mb_advantages = (mb_advantages - np.mean(mb_advantages)) / (np.std(mb_advantages) + 1e-8)
+                            mb_advantages = (mb_advantages - tf.math.reduce_mean(mb_advantages)) / (tf.math.reduce_std(mb_advantages) + 1e-8)
 
                         pg_loss1 = -mb_advantages * ratio
                         pg_loss2 = -mb_advantages * tf.clip_by_value(ratio, 1 - clip_coef, 1 + clip_coef)
                         pg_loss = tf.math.reduce_mean(tf.maximum(pg_loss1, pg_loss2))
+
                         newvalue = tf.squeeze(newvalue)
                         if clip_vloss:
-                            v_loss_unclipped = (newvalue - b_returns[mb_inds]) ** 2
-                            v_clipped = b_values[mb_inds] + tf.clip_by_value(newvalue - b_returns[mb_inds], -clip_coef, clip_coef)
-                            v_loss_clipped = (v_clipped - b_returns[mb_inds]) ** 2
+                            v_loss_unclipped = (newvalue - mb_returns) ** 2
+                            v_clipped = mb_values + tf.clip_by_value(newvalue - mb_returns, -clip_coef, clip_coef)
+                            v_loss_clipped = (v_clipped - mb_returns) ** 2
                             v_loss_max = tf.maximum(v_loss_unclipped, v_loss_clipped)
                             v_loss = 0.5 * tf.math.reduce_mean(v_loss_max)
+
                         else:
-                            v_loss = 0.5 * tf.math.reduce_mean((newvalue - b_returns[mb_inds])**2)
+                            v_loss = 0.5 * tf.math.reduce_mean((newvalue - mb_returns)**2)
 
                         entropy_loss = tf.math.reduce_mean(entropy)
+
                         loss = pg_loss - ent_coef * entropy_loss + v_loss * vf_coef
-                        feature_network_gradient = tape.gradient(loss, self.model.trainable_variables)
-                        feature_network_gradient, _ = tf.clip_by_global_norm(feature_network_gradient, max_grad_norm)
-                        optimizer.apply_gradients(zip(feature_network_gradient, self.model.trainable_variables))
+
+                    feature_network_gradient = tape.gradient(loss, self.model.trainable_variables)
+                    feature_network_gradient, _ = tf.clip_by_global_norm(feature_network_gradient, max_grad_norm)
+                    optimizer.apply_gradients(zip(feature_network_gradient, self.model.trainable_variables))
 
             y_pred, y_true = b_values, b_returns
             var_y = np.var(y_true)
