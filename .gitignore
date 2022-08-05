@@ -11,3 +11,4 @@
 *.pt
 run*
 *.meta.json
+events.out*

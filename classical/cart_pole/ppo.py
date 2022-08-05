@@ -1,100 +1,56 @@
 import argparse
 import os
-import time
-
-import tensorflow.keras as keras
-import tensorflow.keras.layers as layers
-from tensorflow.keras.initializers import Orthogonal
-from tensorflow.keras.optimizers import Adam
-from ppo_tf import MaslouRLModelPPODiscrete
-import gym
 from distutils.util import strtobool
 import numpy as np
-# class EpisodicLifeEnv(gym.Wrapper):
-#     """
-#     Make end-of-life == end-of-episode, but only reset on true game over.
-#     Done by DeepMind for the DQN and co. since it helps value estimation.
-#
-#     :param env: the environment to wrap
-#     """
-#
-#     def __init__(self, env: gym.Env):
-#         gym.Wrapper.__init__(self, env)
-#         self.lives = 0
-#         self.was_real_done = True
-#
-#     def step(self, action: int) :
-#         obs, reward, done, info = self.env.step(action)
-#         self.was_real_done = done
-#         # check current lives, make loss of life terminal,
-#         # then update lives to handle bonus lives
-#         lives = self.env.unwrapped.ale.lives()
-#         if 0 < lives < self.lives:
-#             # for Qbert sometimes we stay in lives == 0 condtion for a few frames
-#             # so its important to keep lives > 0, so that we only reset once
-#             # the environment advertises done.
-#             done = True
-#         self.lives = lives
-#         return obs, reward, done, info
-#
-#
-#     def reset(self, **kwargs) -> np.ndarray:
-#         """
-#         Calls the Gym environment reset, only when lives are exhausted.
-#         This way all states are still reachable even though lives are episodic,
-#         and the learner need not know about any of this behind-the-scenes.
-#
-#         :param kwargs: Extra keywords passed to env.reset() call
-#         :return: the first observation of the environment
-#         """
-#         if self.was_real_done:
-#             obs = self.env.reset(**kwargs)
-#         else:
-#             # no-op step to advance from terminal/lost life state
-#             obs, _, _, _ = self.env.step(0)
-#         self.lives = self.env.unwrapped.ale.lives()
-#         return obs
-class BreakoutAgent(MaslouRLModelPPODiscrete):
+
+import torch
+import torch.nn as nn
+
+from maslourl.models.ppo import PPODiscrete
+
+import gym
+
+def layer_init(layer, std=np.sqrt(2), bias_const=0):
+    nn.init.orthogonal_(layer.weight, std)
+    nn.init.constant_(layer.bias, bias_const)
+    return layer
+
+class BreakoutTorchAgent(nn.Module):
     def __init__(self):
-        super(BreakoutAgent, self).__init__()
+        super(BreakoutTorchAgent, self).__init__()
+        self.network = nn.Sequential(
+            layer_init(nn.Linear(4, 128)),
+            nn.ReLU(),
+            layer_init(nn.Linear(128, 64)),
+            nn.ReLU()
+        )
+        self.critic = layer_init(nn.Linear(64, 1), std=1.)
+        self.actor = nn.Sequential(layer_init(nn.Linear(64, 2), std=0.01), nn.Softmax())
+
+    def forward(self, x):
+        hidden = self.network(x)
+        return self.actor(hidden), self.critic(hidden)
+
+
+class CartPolePPO(PPODiscrete):
+
+    def build_model(self) -> nn.Module:
+        return BreakoutTorchAgent()
 
     def make_env(self, seed, idx, capture_video, capture_every_n_episode, run_name):
         def thunk():
             env = gym.make("CartPole-v1")
-            # env = EpisodicLifeEnv(env)
             env = gym.wrappers.RecordEpisodeStatistics(env)
-            # env = gym.wrappers.ResizeObservation(env, (84, 84))
-            # env = gym.wrappers.GrayScaleObservation(env)
-            # env = gym.wrappers.FrameStack(env, 4)
             env.seed(seed)
             env.action_space.seed(seed)
             env.observation_space.seed(seed)
             return env
+
         return thunk
-
-    def build_model(self) -> keras.Model:
-        # input = layers.Input(shape=(4, 84, 84))
-        # x = layers.Conv2D(filters=32, kernel_size=8, strides=4, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2)), data_format='channels_first')(input)
-        # x = layers.Conv2D(filters=64, kernel_size=4, strides=2, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2)), data_format='channels_first')(x)
-        # x = layers.Conv2D(filters=64, kernel_size=3, strides=1, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2)), data_format='channels_first')(x)
-        # x = layers.Flatten()(x)
-        # hidden = layers.Dense(units=self.feature_size, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2)))(x)
-        # actions = layers.Dense(self.n_actions, activation="softmax", kernel_initializer=Orthogonal(0.01))(hidden)
-        # value = layers.Dense(1, activation="linear", kernel_initializer=Orthogonal(1))(hidden)
-        # model = keras.Model(inputs=input, outputs=[actions, value], name="BreakoutModel")
-        # return model
-
-        input = layers.Input(shape=(4,))
-        x = layers.Dense(128, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2)))(input)
-        hidden = layers.Dense(units=64, activation="relu", kernel_initializer=Orthogonal(np.sqrt(2)))(x)
-        actions = layers.Dense(self.n_actions, activation="softmax", kernel_initializer=Orthogonal(0.01))(hidden)
-        value = layers.Dense(1, activation="linear", kernel_initializer=Orthogonal(1))(hidden)
-        model = keras.Model(inputs=input, outputs=[actions, value], name="Cartpole")
-        return model
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--exp_name', type=str, default=os.path.basename(__file__).rstrip(".py"),
+    parser.add_argument('--exp-name', type=str, default=os.path.basename(__file__).rstrip(".py"),
                         help="The name of this experiment")
     parser.add_argument('--gym-id', type=str, default="CartPole-v1",
                         help='the id of the openai gym environment')
@@ -154,14 +110,14 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    agent = BreakoutAgent()
-    agent.summary()
-    run_name = f"{args.gym_id}_{args.exp_name}_{args.seed}_{int(time.time())}"
-    agent.train(learning_rate=args.learning_rate, num_steps=args.num_steps,
-                num_envs=args.num_envs, seed=args.seed,
-                capture_video=args.capture_video, capture_every_n_video=args.capture_every_n_video, run_name=run_name,
-                total_timesteps=args.total_timesteps, anneal_lr=args.anneal_lr, gae=args.gae, discount_gamma=args.gamma,
-                gae_lambda=args.gae_lambda, update_epochs=args.update_epochs,
-                minibatches=args.num_minibutches, norm_adv=args.norm_adv, clip_coef=args.clip_coef,
-                clip_vloss=args.clip_vloss, ent_coef=args.ent_coef, vf_coef=args.vf_coef, track=args.track,
-                wandb_project_name=args.wandb_project_name, wandb_entity=args.wandb_entity, config=args)
+    cart_pole_ppo = CartPolePPO(cuda=args.cuda, seed = args.seed, torch_deterministic=args.torch_deterministic)
+    cart_pole_ppo.train(learning_rate=args.learning_rate, num_steps=args.num_steps,
+                        num_envs=args.num_envs, seed=args.seed,
+                        capture_video=args.capture_video, capture_every_n_video=args.capture_every_n_video, exp_name=args.exp_name,
+                        total_timesteps=args.total_timesteps, anneal_lr=args.anneal_lr, gae=args.gae, discount_gamma=args.gamma,
+                        gae_lambda=args.gae_lambda, update_epochs=args.update_epochs,
+                        minibatches=args.num_minibutches, norm_adv=args.norm_adv, clip_coef=args.clip_coef,
+                        clip_vloss=args.clip_vloss, ent_coef=args.ent_coef, vf_coef=args.vf_coef, track=args.track,
+                        wandb_project_name=args.wandb_project_name, wandb_entity=args.wandb_entity,
+                        save_2_wandb=args.track, config=args)
+
