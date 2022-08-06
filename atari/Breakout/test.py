@@ -95,7 +95,7 @@ class BufferWrapper(gym.ObservationWrapper):
     def observation(self, observation):
         self.buffer[:-1] = self.buffer[1:]
         self.buffer[-1] = observation
-        return self.buffer
+        return np.copy(self.buffer)
 
 
 def create_env():
