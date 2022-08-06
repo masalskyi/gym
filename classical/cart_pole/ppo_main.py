@@ -1,5 +1,6 @@
 import argparse
 import os
+import time
 from distutils.util import strtobool
 
 from ppo_agent import CartPolePPO
@@ -65,14 +66,24 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
+    run_name = f"{args.exp_name}_{args.seed}_{int(time.time())}"
+    if args.track:
+        import wandb
+
+        wandb.init(project=args.wandb_project_name,
+                   entity=args.wandb_entity,
+                   sync_tensorboard=True,
+                   config=vars(args),
+                   name=run_name,
+                   monitor_gym=True,
+                   save_code=True)
     cart_pole_ppo = CartPolePPO(cuda=args.cuda, seed=args.seed, torch_deterministic=args.torch_deterministic)
     cart_pole_ppo.train(learning_rate=args.learning_rate, num_steps=args.num_steps,
                         num_envs=args.num_envs, seed=args.seed,
-                        capture_video=args.capture_video, capture_every_n_video=args.capture_every_n_video, exp_name=args.exp_name,
+                        capture_video=args.capture_video, capture_every_n_video=args.capture_every_n_video, run_name=run_name,
                         total_timesteps=args.total_timesteps, anneal_lr=args.anneal_lr, gae=args.gae, discount_gamma=args.gamma,
                         gae_lambda=args.gae_lambda, update_epochs=args.update_epochs,
                         minibatches=args.num_minibutches, norm_adv=args.norm_adv, clip_coef=args.clip_coef,
-                        clip_vloss=args.clip_vloss, ent_coef=args.ent_coef, vf_coef=args.vf_coef, track=args.track,
-                        wandb_project_name=args.wandb_project_name, wandb_entity=args.wandb_entity,
+                        clip_vloss=args.clip_vloss, ent_coef=args.ent_coef, vf_coef=args.vf_coef,
                         save_2_wandb=args.track, config=args)
 

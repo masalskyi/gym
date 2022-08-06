@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from maslourl.models.ppo import PPODiscrete
+from maslourl.models.discrete.ppo import PPODiscrete
 
 import gym
 
@@ -44,3 +44,18 @@ class CartPolePPO(PPODiscrete):
             return env
 
         return thunk
+
+    def track_info(self, info, average_reward_tracker, save_2_wandb, verbose, global_step, ckpt_path):
+        if "episode" in info.keys():
+            for item in info["episode"]:
+                if item is not None:
+                    if verbose:
+                        print(f"global_step={global_step}, episodic_return={item['r']}")
+                    self.writer.add_scalar("charts/episodic_return", item["r"], global_step)
+                    self.writer.add_scalar("charts/episodic_length", item["l"], global_step)
+                    average_reward_tracker.add(item["r"])
+                    avg = average_reward_tracker.get_average()
+                    if avg > self.best_reward:
+                        self.best_reward = avg
+                        self.save_agent(ckpt_path, save_2_wandb=save_2_wandb)
+                    break
