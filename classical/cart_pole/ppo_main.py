@@ -1,53 +1,8 @@
 import argparse
 import os
 from distutils.util import strtobool
-import numpy as np
 
-import torch
-import torch.nn as nn
-
-from maslourl.models.ppo import PPODiscrete
-
-import gym
-
-def layer_init(layer, std=np.sqrt(2), bias_const=0):
-    nn.init.orthogonal_(layer.weight, std)
-    nn.init.constant_(layer.bias, bias_const)
-    return layer
-
-class BreakoutTorchAgent(nn.Module):
-    def __init__(self):
-        super(BreakoutTorchAgent, self).__init__()
-        self.network = nn.Sequential(
-            layer_init(nn.Linear(4, 128)),
-            nn.ReLU(),
-            layer_init(nn.Linear(128, 64)),
-            nn.ReLU()
-        )
-        self.critic = layer_init(nn.Linear(64, 1), std=1.)
-        self.actor = nn.Sequential(layer_init(nn.Linear(64, 2), std=0.01), nn.Softmax())
-
-    def forward(self, x):
-        hidden = self.network(x)
-        return self.actor(hidden), self.critic(hidden)
-
-
-class CartPolePPO(PPODiscrete):
-
-    def build_model(self) -> nn.Module:
-        return BreakoutTorchAgent()
-
-    def make_env(self, seed, idx, capture_video, capture_every_n_episode, run_name):
-        def thunk():
-            env = gym.make("CartPole-v1")
-            env = gym.wrappers.RecordEpisodeStatistics(env)
-            env.seed(seed)
-            env.action_space.seed(seed)
-            env.observation_space.seed(seed)
-            return env
-
-        return thunk
-
+from ppo_agent import CartPolePPO
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp-name', type=str, default=os.path.basename(__file__).rstrip(".py"),
@@ -58,7 +13,7 @@ def parse_args():
                         help="Tracking the average reward with specified length and save the best model")
     parser.add_argument('--save-best-to-wandb', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
                         help="toggle whether to save the best model to w&b")
-    parser.add_argument('--learning_rate', type=float, default=2.5e-4, help="the learning rate of the optimizer")
+    parser.add_argument('--learning-rate', type=float, default=2.5e-4, help="the learning rate of the optimizer")
     parser.add_argument('--verbose', type=lambda x: bool(strtobool(x)), default=True, nargs="?", const=True,
                         help="toggle whether to verbose on console")
     parser.add_argument('--seed', type=int, default=1, help="seed of the experiment")
@@ -69,7 +24,7 @@ def parse_args():
                         help="if toggled, cuda will not be enabled by default")
     parser.add_argument('--track', type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="if toggled, this experiment will be tracked with w&b")
-    parser.add_argument('--wandb-project-name', type=str, default="rl-ppo-cart-pole", help="the w&b project name")
+    parser.add_argument('--wandb-project-name', type=str, default="rl-cart-pole", help="the w&b project name")
     parser.add_argument('--wandb-entity', type=str, default=None, help="the entity (team) of wandb's project")
     parser.add_argument('--capture-video', type=lambda x: bool(strtobool(x)), default=False, nargs="?", const=True,
                         help="whether to capture videos of the agent perfomance")
@@ -110,7 +65,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    cart_pole_ppo = CartPolePPO(cuda=args.cuda, seed = args.seed, torch_deterministic=args.torch_deterministic)
+    cart_pole_ppo = CartPolePPO(cuda=args.cuda, seed=args.seed, torch_deterministic=args.torch_deterministic)
     cart_pole_ppo.train(learning_rate=args.learning_rate, num_steps=args.num_steps,
                         num_envs=args.num_envs, seed=args.seed,
                         capture_video=args.capture_video, capture_every_n_video=args.capture_every_n_video, exp_name=args.exp_name,
