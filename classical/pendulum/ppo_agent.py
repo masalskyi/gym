@@ -44,7 +44,7 @@ class PendulumPPO(PPOContinue):
             env = gym.make('Pendulum-v1', g=9.81)
             env = gym.wrappers.RecordEpisodeStatistics(env)
             env = gym.wrappers.ClipAction(env)
-            if capture_video:
+            if capture_video and idx == 0:
                 env = gym.wrappers.RecordVideo(env, "./videos/" + run_name, lambda x: x % capture_every_n_episode == 0)
             env.seed(seed)
             env.action_space.seed(seed)
