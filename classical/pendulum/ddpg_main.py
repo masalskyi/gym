@@ -58,6 +58,7 @@ if __name__ == '__main__':
                    monitor_gym=True,
                    save_code=True)
     pendulum_ddpg = PendulumDDPG(cuda=args.cuda, seed=args.seed, torch_deterministic=args.torch_deterministic)
+    print(pendulum_ddpg.device)
     pendulum_ddpg.train(episodes=args.total_episodes, max_steps_for_episode=args.max_steps,
                         train_every_step=args.train_every_n_step, tau=args.tau,
                         training_batch_size=args.train_batch_size, discount_factor=args.gamma,

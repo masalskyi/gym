@@ -1,6 +1,6 @@
 import torch
 import gym
-from ddpg_torch import DDPG
+from maslourl.models.continuing.ddpg import DDPG
 import numpy as np
 import torch.nn as nn
 
