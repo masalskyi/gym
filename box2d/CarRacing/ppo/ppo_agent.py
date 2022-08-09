@@ -3,7 +3,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from gym import spaces
-from gym.core import ActType
 
 from maslourl.models.continuing.ppo import PPOContinuing
 
@@ -43,13 +42,13 @@ class CarRacingModel(nn.Module):
 class Preprocess(gym.ObservationWrapper):
     def __init__(self, env):
         super(Preprocess, self).__init__(env)
-        self.observation_space = spaces.Box(0, 255, shape=(46, 96, 3))
+        self.observation_space = spaces.Box(0, 255, shape=(81, 96, 3))
 
     def reset(self, **kwargs):
         return self.observation(self.env.reset())
 
     def observation(self, observation):
-        image = observation[:-50]
+        image = observation[:-15]
         image[np.where((np.logical_and(image >= [101, 203, 101], image <= [101, 230, 101])).all(axis=2))] = np.array(
             [101, 203, 101])
         image[np.where((np.logical_and(image >= [101, 101, 101], image <= [106, 106, 106])).all(axis=2))] = np.array(
