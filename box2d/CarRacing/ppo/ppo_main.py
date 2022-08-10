@@ -44,7 +44,7 @@ def parse_args():
                         help="the discount factor gamma")
     parser.add_argument('--gae-lambda', type=float, default=0.95,
                         help="the lambda for GAE")
-    parser.add_argument('--num-minibutches', type=int, default=4,
+    parser.add_argument('--num-minibatches', type=int, default=4,
                         help="the number of minibatches")
     parser.add_argument('--update-epochs', type=int, default=4,
                         help="the K epochs to update the policy")
@@ -62,7 +62,7 @@ def parse_args():
                         help="the maximum norm of gradient clipping")
     args = parser.parse_args()
     args.batch_size = int(args.num_envs * args.num_steps)
-    args.minibatch_size = int(args.batch_size // args.num_minibutches)
+    args.minibatch_size = int(args.batch_size // args.num_minibatches)
     return args
 
 
@@ -81,18 +81,18 @@ if __name__ == '__main__':
                    save_code=True)
     car_racing_ppo = CarRacingPPO(cuda=args.cuda, seed=args.seed, torch_deterministic=args.torch_deterministic)
     print(car_racing_ppo.device)
-    # car_racing_ppo.train(learning_rate=args.learning_rate, num_steps=args.num_steps,
-    #                     num_envs=args.num_envs, seed=args.seed,
-    #                     capture_video=args.capture_video, capture_every_n_video=args.capture_every_n_video, run_name=run_name,
-    #                     total_timesteps=args.total_timesteps, anneal_lr=args.anneal_lr, gae=args.gae, discount_gamma=args.gamma,
-    #                     gae_lambda=args.gae_lambda, update_epochs=args.update_epochs,
-    #                     minibatches=args.num_minibutches, norm_adv=args.norm_adv, clip_coef=args.clip_coef,
-    #                     clip_vloss=args.clip_vloss, ent_coef=args.ent_coef, vf_coef=args.vf_coef,
-    #                     save_2_wandb=args.track, config=args)
-    env = car_racing_ppo.make_env(0, 0, False, 0, "")()
-    obs = env.reset()
-    for i in range(1000):
-        action = env.action_space.sample()
-        obs, reward, done, _ = env.step(action)
-        cv2.imshow("img", obs[0])
-        cv2.waitKey(1)
+    car_racing_ppo.train(learning_rate=args.learning_rate, num_steps=args.num_steps,
+                        num_envs=args.num_envs, seed=args.seed,
+                        capture_video=args.capture_video, capture_every_n_video=args.capture_every_n_video, run_name=run_name,
+                        total_timesteps=args.total_timesteps, anneal_lr=args.anneal_lr, gae=args.gae, discount_gamma=args.gamma,
+                        gae_lambda=args.gae_lambda, update_epochs=args.update_epochs,
+                        minibatches=args.num_minibatches, norm_adv=args.norm_adv, clip_coef=args.clip_coef,
+                        clip_vloss=args.clip_vloss, ent_coef=args.ent_coef, vf_coef=args.vf_coef,
+                        save_2_wandb=args.track, config=args)
+    # env = car_racing_ppo.make_env(0, 0, False, 0, "")()
+    # obs = env.reset()
+    # for i in range(1000):
+    #     action = env.action_space.sample()
+    #     obs, reward, done, _ = env.step(action)
+    #     cv2.imshow("img", obs[0])
+    #     cv2.waitKey(1)

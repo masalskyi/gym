@@ -19,6 +19,7 @@ def layer_init(layer, std=np.sqrt(2), bias_const=0):
 class CarRacingModel(nn.Module):
     def __init__(self):
         super(CarRacingModel, self).__init__()
+        n_actions = 3
         self.network = nn.Sequential(
             layer_init(nn.Conv2d(4, 32, 8, stride=4)),
             nn.ReLU(),
@@ -31,8 +32,8 @@ class CarRacingModel(nn.Module):
             nn.ReLU()
         )
         self.critic = layer_init(nn.Linear(512, 1), std=1.)
-        self.actor_means = nn.Sequential(layer_init(nn.Linear(512, 2), std=0.01), nn.Tanh())
-        self.actor_logstd = nn.Parameter(torch.zeros(1, 2))
+        self.actor_means = nn.Sequential(layer_init(nn.Linear(512, n_actions), std=0.01), nn.Tanh())
+        self.actor_logstd = nn.Parameter(torch.zeros(1, n_actions))
 
     def forward(self, x):
         hidden = self.network(x)
@@ -42,13 +43,13 @@ class CarRacingModel(nn.Module):
 class Preprocess(gym.ObservationWrapper):
     def __init__(self, env):
         super(Preprocess, self).__init__(env)
-        self.observation_space = spaces.Box(0, 255, shape=(81, 96, 3))
+        self.observation_space = spaces.Box(0, 255, shape=(84, 84, 3))
 
     def reset(self, **kwargs):
         return self.observation(self.env.reset())
 
     def observation(self, observation):
-        image = observation[:-15]
+        image = observation[:-12, 6:-6]
         image[np.where((np.logical_and(image >= [101, 203, 101], image <= [101, 230, 101])).all(axis=2))] = np.array(
             [101, 203, 101])
         image[np.where((np.logical_and(image >= [101, 101, 101], image <= [106, 106, 106])).all(axis=2))] = np.array(
@@ -70,10 +71,10 @@ class ImageScale(gym.ObservationWrapper):
 class ActionChange(gym.ActionWrapper):
     def __init__(self, env):
         super(ActionChange, self).__init__(env)
-        self.action_space = spaces.Box(low=-1, high=1, shape=(2,))
+        self.action_space = spaces.Box(low=-1, high=1, shape=(3,))
 
     def action(self, action):
-        return np.array([action[0], np.clip(action[1], 0, 1), -np.clip(action[1], -1, 0)])
+        return np.array([action[0], (action[1]+1) * 0.5, (action[2] + 1) * 0.5])
 
 
 class CarRacingPPO(PPOContinuing):
@@ -93,7 +94,6 @@ class CarRacingPPO(PPOContinuing):
             env = ClipRewardEnv(env)
             env = Preprocess(env)
             env = ActionChange(env)
-            env = gym.wrappers.ResizeObservation(env, (84, 84))
             env = gym.wrappers.GrayScaleObservation(env)
             env = ImageScale(env)
             env = gym.wrappers.FrameStack(env, 4)
