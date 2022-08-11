@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import numpy as np
 import argparse
@@ -40,16 +42,14 @@ def overlay_transparent(background_img, img_to_overlay_t, x, y, overlay_size=Non
     bg_img[y:y + h, x:x + w] = cv2.add(img1_bg, img2_fg)
     return bg_img
 
+logo = cv2.imread(os.path.abspath(args.input_image), cv2.IMREAD_UNCHANGED)
+logo = cv2.resize(logo, (args.logo_width,args.logo_height))
 
-video = cv2.VideoCapture(args.input_video)
-images = []
-while video.isOpened():
-    ret, img = video.read()
-    if not ret:
-        break
-    images.append(img)
-FRAME_WIDTH = images[0].shape[1]
-FRAME_HEIGHT = images[0].shape[0]
+video = cv2.VideoCapture(os.path.abspath(args.input_video))
+video.open(os.path.abspath(args.input_video))
+ret, img = video.read()
+FRAME_WIDTH = img.shape[1]
+FRAME_HEIGHT = img.shape[0]
 fps = 30
 (major_ver, minor_ver, subminor_ver) = (cv2.__version__).split('.')
 
@@ -61,10 +61,12 @@ else:
 print("Frames per second using video.get(cv2.CAP_PROP_FPS) : {0}".format(fps))
 out = cv2.VideoWriter(args.output_file, cv2.VideoWriter_fourcc(*'MP4V'), fps, (FRAME_WIDTH, FRAME_HEIGHT))
 
-logo = cv2.imread(args.input_image, cv2.IMREAD_UNCHANGED)
-logo = cv2.resize(logo, (args.logo_width,args.logo_height))
-for i in range(len(images)):
-    image = overlay_transparent(images[i], logo, FRAME_WIDTH-args.logo_width, FRAME_HEIGHT-args.logo_height)
+while True:
+    image = overlay_transparent(img, logo, FRAME_WIDTH - args.logo_width, FRAME_HEIGHT - args.logo_height)
     out.write(image)
+    ret, img = video.read()
+    if not ret:
+        break
+
 out.release()
 
