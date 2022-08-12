@@ -14,6 +14,7 @@ All algorithms are created in python + tensorflow + keras + keras-rl / torch
 <ul>
     <li><a href="box2d/lunar_lander/lunar_lander">Lunar lander</a></li>
     <li><a href="box2d/car_racing/car_racing">Car racing</a></li>
+    <li><a href="box2d/bipedal_walker/bipedal_walker">Bipedal walker</a></li>
 </ul>
 
 
