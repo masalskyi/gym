@@ -1,7 +1,7 @@
 # Opean AI Gym
 ## Introduction
 This projects aims to improve my skills in RL. All Environments that i would use can be found [here](https://www.gymlibrary.ml/)
-All algorithms are created in python + tensorflow + keras + keras-rl
+All algorithms are created in python + tensorflow + keras + keras-rl / torch
 
 ## [Classical controls](https://www.gymlibrary.ml/environments/classic_control/)
 <ul>
