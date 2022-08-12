@@ -11,6 +11,8 @@ parser.add_argument("-o", "--output_file", default="./video.mp4", help="Path to 
 parser.add_argument("--fps", dest="fps", default=60, help="Frames per second for output video", type=float)
 
 args = parser.parse_args()
+
+
 def read_video(file):
     images = []
     cap = cv2.VideoCapture(file)
@@ -21,15 +23,30 @@ def read_video(file):
             break
         images.append(img)
     return images
-videos = []
+
+
 for video in args.inp:
     print(os.path.exists(video))
-    videos.append(read_video(os.path.abspath(video)))
 
-FRAME_WIDTH = videos[0][0].shape[1]
-FRAME_HEIGHT = videos[0][0].shape[0]
+first_video = os.path.abspath(args.inp[0])
+cap = cv2.VideoCapture(first_video)
+cap.open(first_video)
+ret, img = cap.read()
+
+cap.release()
+
+FRAME_WIDTH = img.shape[1]
+FRAME_HEIGHT = img.shape[0]
 out = cv2.VideoWriter(args.output_file, cv2.VideoWriter_fourcc(*'MP4V'), args.fps, (FRAME_WIDTH, FRAME_HEIGHT))
-for video in videos:
-    for img in video:
+
+for video in args.inp:
+    video_file = os.path.abspath(video)
+    cap = cv2.VideoCapture(video_file)
+    cap.open(video_file)
+    while True:
+        ret, img = cap.read()
+        if not ret:
+            break
         out.write(img)
+    cap.release()
 out.release()
