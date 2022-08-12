@@ -118,13 +118,8 @@ and hyper-parameters:
 anneal_lr=True
 average_reward_2_save=20
 batch_size=2048
-capture_every_n_video=100
-capture_video=True
 clip_coef=0.2
-clip_vloss=True
-cuda=True
 ent_coef=0.01
-gae=True
 gae_lambda=0.95
 gamma=0.99
 learning_rate=0.0003
@@ -134,13 +129,9 @@ norm_adv=True
 num_envs=16
 num_minibatches=16
 num_steps=128
-save_best_to_wandb=True
-seed=1
-torch_deterministic=True
 total_timesteps=2000000
 track=True
 update_epochs=10
-verbose=True
 vf_coef=0.5
 ```
 The training were performed two times. First with lr=3e-4, the second one with lr=1e-4
