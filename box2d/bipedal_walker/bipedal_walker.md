@@ -110,7 +110,7 @@ states = 8
 actions = 4
 learning_rate = 0.0005
 ```
-The final model achieved 237.52 average reward for 100 episodes. That is enough to conclude that the task is solved.
+The final model achieved 298.45 average reward for 100 episodes. That is enough to conclude that the task is solved.
 
 
 
